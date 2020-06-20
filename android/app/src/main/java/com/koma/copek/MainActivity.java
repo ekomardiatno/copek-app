@@ -1,4 +1,4 @@
-package com.copek;
+package com.koma.copek;
 
 import com.facebook.react.ReactActivity;
 

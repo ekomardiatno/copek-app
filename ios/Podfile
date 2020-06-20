@@ -82,6 +82,15 @@ target 'Copek' do
     # Pods for testing
   end
 
+  # React Native Maps dependencies
+  rn_maps_path = '../node_modules/react-native-maps'
+  pod 'react-native-google-maps', :path => rn_maps_path
+  pod 'GoogleMaps'
+  pod 'Google-Maps-iOS-Utils'
+
+  pod 'react-native-admob', path: '../node_modules/react-native-admob'
+  pod 'Google-Mobile-Ads-SDK'
+
   use_native_modules!
 
   # Enables Flipper.
