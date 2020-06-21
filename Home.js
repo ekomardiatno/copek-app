@@ -180,7 +180,7 @@ class Home extends Component {
                             </View>
                         </View>
                         <Button title='Hello world!' onPress={() => {
-                            // this.props.navigation.navigate('Hello')
+                            this.props.navigation.navigate('Hello')
                             this.sound.play((success) => {
                                 if (success) {
                                     console.log('successfully finished playing')
