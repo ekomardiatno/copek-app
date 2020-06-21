@@ -13,6 +13,7 @@ import BackgroundGeolocation from '@mauron85/react-native-background-geolocation
 import GPSState from 'react-native-gps-state'
 import PolylineEncoder from '@mapbox/polyline'
 import Dash from 'react-native-dash'
+import Icon from 'react-native-vector-icons/FontAwesome5'
 
 class Home extends Component {
     constructor(props) {
@@ -156,6 +157,7 @@ class Home extends Component {
                         </MapView>
                     </View>
                     <Dash dashColor='#ddd' dashThickness={1} style={{width:'100%', height:1}}/>
+                    <Icon style={{ textAlign: 'center', marginTop: 10, fontSize: 20 }} name='user'/>
                     <Text style={{ fontSize: 20, textAlign: 'center', fontFamily: 'Yantramanav', marginVertical: 10 }}>Powered by <Text style={{ fontWeight: 'bold' }}>Eko Mardiatno</Text></Text>
                     <Dash dashColor='#ddd' dashThickness={1} style={{width:'100%', height:1}}/>
                     <View style={{ alignItems: 'center', marginBottom: 15, marginTop: 15 }}>
