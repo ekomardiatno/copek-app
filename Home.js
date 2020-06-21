@@ -6,14 +6,18 @@ import {
     Linking,
     Button
 } from 'react-native';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
+import MapView, { PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import { AdMobBanner } from 'react-native-admob'
 import BackgroundGeolocation from '@mauron85/react-native-background-geolocation'
 import GPSState from 'react-native-gps-state'
+import PolylineEncoder from '@mapbox/polyline'
 
 class Home extends Component {
     constructor(props) {
         super(props)
+        this.state = {
+            polyline: []
+        }
         BackgroundGeolocation.configure({
             desiredAccuracy: BackgroundGeolocation.HIGH_ACCURACY,
             stationaryRadius: 50,
@@ -84,12 +88,46 @@ class Home extends Component {
                     GPSState.requestAuthorization(GPSState.AUTHORIZED)
                 }
             })
+        this._polylineEncode()
     }
 
     componentWillUnmount() {
         GPSState.removeListener()
         BackgroundGeolocation.removeAllListeners()
     }
+
+    _polylineEncode = async () => {
+        let origin = {
+            latitude: -0.379803,
+            longitude: 102.394354
+        }
+        let destination = {
+            latitude: -0.389475,
+            longitude: 102.442707
+        }
+
+        let directions = await this._getDirections(origin, destination)
+        directions = PolylineEncoder.decode(directions.routes[0].overview_polyline.points)
+        directions = directions.map((point, index) => {
+            return {
+                latitude: point[0],
+                longitude: point[1]
+            }
+        })
+        this.setState({
+            polyline: directions
+        })
+    }
+
+    _getDirections = (origin, destination) => {
+        return new Promise((resolve, reject) => {
+            fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=AIzaSyAxhYU3ruCgYwymJKQ7MtdhCXLtuWweWc0`)
+                .then(res => res.json())
+                .then(resolve)
+                .catch(reject)
+        })
+    }
+
     render() {
         return (
             <View style={{ flex: 1 }}>
@@ -99,12 +137,20 @@ class Home extends Component {
                             provider={PROVIDER_GOOGLE} // remove if not using Google Maps
                             style={{ flex: 1 }}
                             region={{
-                                latitude: 37.78825,
-                                longitude: -122.4324,
+                                latitude: -0.396063,
+                                longitude: 102.411485,
                                 latitudeDelta: 0.015,
                                 longitudeDelta: 0.0121,
                             }}
                         >
+                            {
+                                this.state.polyline.length > 0 &&
+                                <Polyline
+                                    coordinates={this.state.polyline}
+                                    strokeWidth={4}
+                                    strokeColor={'#6ab04c'}
+                                />
+                            }
                         </MapView>
                     </View>
                     <View style={{ alignItems: 'center', marginBottom: 15 }}>
