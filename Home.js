@@ -5,7 +5,8 @@ import {
     Platform,
     Linking,
     Button,
-    Text
+    Text,
+    SafeAreaView
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import { AdMobBanner } from 'react-native-admob'
@@ -14,6 +15,7 @@ import GPSState from 'react-native-gps-state'
 import PolylineEncoder from '@mapbox/polyline'
 import Dash from 'react-native-dash'
 import Icon from 'react-native-vector-icons/FontAwesome5'
+import Sound from 'react-native-sound'
 
 class Home extends Component {
     constructor(props) {
@@ -37,6 +39,14 @@ class Home extends Component {
             fastestInterval: 5000,
             activitiesInterval: 10000,
             stopOnStillActivity: false,
+        })
+        Sound.setCategory('Playback')
+        this.sound = new Sound('iphone_notification.mp3', Sound.MAIN_BUNDLE, error => {
+            if (error) {
+                console.log('failed to load the sound', error)
+                return
+            }
+            console.log('duration in seconds: ' + this.sound.getDuration() + 'number of channels: ' + this.sound.getNumberOfChannels())
         })
     }
 
@@ -134,42 +144,54 @@ class Home extends Component {
     render() {
         return (
             <View style={{ flex: 1 }}>
-                <ScrollView>
-                    <View style={{ height: 400, backgroundColor: '#f5f5f5', marginBottom: 15 }}>
-                        <MapView
-                            provider={PROVIDER_GOOGLE} // remove if not using Google Maps
-                            style={{ flex: 1 }}
-                            region={{
-                                latitude: -0.396063,
-                                longitude: 102.411485,
-                                latitudeDelta: 0.015,
-                                longitudeDelta: 0.0121,
-                            }}
-                        >
-                            {
-                                this.state.polyline.length > 0 &&
-                                <Polyline
-                                    coordinates={this.state.polyline}
-                                    strokeWidth={4}
-                                    strokeColor={'#6ab04c'}
-                                />
-                            }
-                        </MapView>
-                    </View>
-                    <Dash dashColor='#ddd' dashThickness={1} style={{width:'100%', height:1}}/>
-                    <Icon style={{ textAlign: 'center', marginTop: 10, fontSize: 20 }} name='user'/>
-                    <Text style={{ fontSize: 20, textAlign: 'center', fontFamily: 'Yantramanav', marginVertical: 10 }}>Powered by <Text style={{ fontWeight: 'bold' }}>Eko Mardiatno</Text></Text>
-                    <Dash dashColor='#ddd' dashThickness={1} style={{width:'100%', height:1}}/>
-                    <View style={{ alignItems: 'center', marginBottom: 15, marginTop: 15 }}>
-                        <View style={{ backgroundColor: '#f5f5f5', width: 300, height: 250 }}>
-                            <AdMobBanner
-                                adSize="mediumRectangle"
-                                adUnitID="ca-app-pub-8047867116429118/7062955117"
-                            />
+                <SafeAreaView>
+                    <ScrollView>
+                        <View style={{ height: 400, backgroundColor: '#f5f5f5', marginBottom: 15 }}>
+                            <MapView
+                                provider={PROVIDER_GOOGLE} // remove if not using Google Maps
+                                style={{ flex: 1 }}
+                                region={{
+                                    latitude: -0.396063,
+                                    longitude: 102.411485,
+                                    latitudeDelta: 0.015,
+                                    longitudeDelta: 0.0121,
+                                }}
+                            >
+                                {
+                                    this.state.polyline.length > 0 &&
+                                    <Polyline
+                                        coordinates={this.state.polyline}
+                                        strokeWidth={4}
+                                        strokeColor={'#6ab04c'}
+                                    />
+                                }
+                            </MapView>
                         </View>
-                    </View>
-                    <Button title='Hello world!' onPress={() => this.props.navigation.navigate('Hello')} />
-                </ScrollView>
+                        <Dash dashColor='#ddd' dashThickness={1} style={{ width: '100%', height: 1 }} />
+                        <Icon style={{ textAlign: 'center', marginTop: 10, fontSize: 20 }} name='user' />
+                        <Text style={{ fontSize: 20, textAlign: 'center', fontFamily: 'Yantramanav', marginVertical: 10 }}>Powered by <Text style={{ fontWeight: 'bold' }}>Eko Mardiatno</Text></Text>
+                        <Dash dashColor='#ddd' dashThickness={1} style={{ width: '100%', height: 1 }} />
+                        <View style={{ alignItems: 'center', marginBottom: 15, marginTop: 15 }}>
+                            <View style={{ backgroundColor: '#f5f5f5', width: 300, height: 250 }}>
+                                <AdMobBanner
+                                    adSize="mediumRectangle"
+                                    adUnitID="ca-app-pub-8047867116429118/7062955117"
+                                />
+                            </View>
+                        </View>
+                        <Button title='Hello world!' onPress={() => {
+                            // this.props.navigation.navigate('Hello')
+                            this.sound.play((success) => {
+                                if (success) {
+                                    console.log('successfully finished playing')
+                                } else {
+                                    console.log('playback failed due to audio decoding errors')
+                                }
+                            })
+                        }
+                        } />
+                    </ScrollView>
+                </SafeAreaView>
             </View>
         )
     }
