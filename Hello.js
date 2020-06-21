@@ -21,6 +21,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
 })
+import Spinner from 'react-native-spinkit'
 
 class MainTab extends Component {
     render() {
@@ -40,7 +41,7 @@ class SecondTab extends Component {
     render() {
         return (
             <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                <Text>Second tab!</Text>
+                <Spinner type='Wave' color='#ff3535' />
             </View>
         )
     }
