@@ -4,7 +4,8 @@ import {
     ScrollView,
     Platform,
     Linking,
-    Button
+    Button,
+    Text
 } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import { AdMobBanner } from 'react-native-admob'
@@ -154,6 +155,8 @@ class Home extends Component {
                             }
                         </MapView>
                     </View>
+                    <Dash dashColor='#ddd' dashThickness={1} style={{width:'100%', height:1}}/>
+                    <Text style={{ fontSize: 20, textAlign: 'center', fontFamily: 'Yantramanav', marginVertical: 10 }}>Powered by <Text style={{ fontWeight: 'bold' }}>Eko Mardiatno</Text></Text>
                     <Dash dashColor='#ddd' dashThickness={1} style={{width:'100%', height:1}}/>
                     <View style={{ alignItems: 'center', marginBottom: 15, marginTop: 15 }}>
                         <View style={{ backgroundColor: '#f5f5f5', width: 300, height: 250 }}>
