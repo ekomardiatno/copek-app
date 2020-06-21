@@ -16,6 +16,7 @@ import PolylineEncoder from '@mapbox/polyline'
 import Dash from 'react-native-dash'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import Sound from 'react-native-sound'
+import io from 'socket.io-client'
 
 class Home extends Component {
     constructor(props) {
@@ -48,6 +49,10 @@ class Home extends Component {
             }
             console.log('duration in seconds: ' + this.sound.getDuration() + 'number of channels: ' + this.sound.getNumberOfChannels())
         })
+        // this.socket = io('https://ekomardiatno.site:3000/')
+        // this.socket.on('connect', function () {
+        //     console.log('Connected on ', this.socket.id)
+        // }.bind(this))
     }
 
     componentDidMount() {
