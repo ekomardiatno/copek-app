@@ -1,0 +1,650 @@
+import React, { Component } from 'react'
+import {
+  SafeAreaView,
+  ScrollView,
+  TouchableNativeFeedback,
+  TouchableOpacity,
+  View,
+  Text,
+  StatusBar,
+  Dimensions,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  TouchableHighlight
+} from 'react-native'
+import { SliderCard, Items, Button, DummyItems, DummySliderCard } from '../../components/Components'
+import Animated, { Easing } from 'react-native-reanimated'
+import Feather from 'react-native-vector-icons/Feather'
+import Fa from 'react-native-vector-icons/FontAwesome5'
+import Evil from 'react-native-vector-icons/EvilIcons'
+import Color, { colorYiq } from '../../components/Color'
+const { width, height } = Dimensions.get('window')
+import Currency from '../../helpers/Currency'
+import { getCurrentPosition } from '../../actions/locations.actions'
+import { getGeocoding, getAddressComponents } from '../../actions/geocode.actions'
+import cancellablePromise from '../../helpers/cancellablePromise'
+import { getCart } from '../../actions/carts.actions'
+import { HOST_REST_API } from '../../components/Define'
+import { FoodHome } from '../../components/Section'
+
+class Home extends Component {
+  scrollRef = React.createRef()
+  constructor() {
+    super()
+    this.state = {
+      scrollY: new Animated.Value(0),
+      wrapperCart: new Animated.Value(100),
+      scrollEnd: 0,
+      carts: [],
+      position: null,
+      collection: [],
+      currentLocation: null,
+      emptyCollection: false,
+      errorLocation: false,
+      errorGeocode: false,
+      errorCollection: false
+    }
+  }
+
+  pendingPromises = []
+
+  appendPendingPromise = promise => {
+    this.pendingPromises = [...this.pendingPromises, promise]
+  }
+
+  removePendingPromise = promise => {
+    this.pendingPromises = this.pendingPromises.filter(p => p !== promise)
+  }
+
+  componentDidMount() {
+    Platform.OS === 'android' &&
+      StatusBar.setBackgroundColor(Color.white, true)
+    StatusBar.setBarStyle('dark-content', true)
+    this._getLocation()
+  }
+
+  componentWillUnmount() {
+    if (this.props.navigation.getParam('statusbar')) {
+      StatusBar.setBarStyle(this.props.navigation.getParam('statusbar').barStyle, true)
+      Platform.OS === 'android' &&
+        StatusBar.setBackgroundColor(this.props.navigation.getParam('statusbar').background, true)
+    }
+
+    this.pendingPromises.map(p => {
+      this.removePendingPromise(p)
+    })
+  }
+
+  _getLocation = () => {
+    this.setState({
+      errorLocation: false
+    }, () => {
+      const wrappedPromise = cancellablePromise(getCurrentPosition())
+      this.appendPendingPromise(wrappedPromise)
+      wrappedPromise.promise
+        .then(position => {
+          this.setState({
+            position
+          }, () => {
+            this._getGeocoding()
+          })
+        })
+        .then(() => {
+          this.removePendingPromise(wrappedPromise)
+        })
+        .catch((error) => {
+          this.setState({
+            errorLocation: true
+          })
+        })
+    })
+  }
+
+  dataCart = () => {
+    const wrappedPromise = cancellablePromise(getCart())
+    this.appendPendingPromise(wrappedPromise)
+    wrappedPromise.promise
+      .then(carts => {
+        this.setState({
+          carts
+        }, () => {
+          this.forceUpdate()
+          if (this.state.carts.length < 1) {
+            Animated.timing(this.state.wrapperCart, {
+              duration: 250,
+              toValue: 100,
+              easing: Easing.inOut(Easing.ease),
+            }).start()
+          } else {
+            Animated.timing(this.state.wrapperCart, {
+              duration: 250,
+              toValue: 0,
+              easing: Easing.inOut(Easing.ease),
+            }).start()
+          }
+        })
+      })
+      .then(() => {
+        this.removePendingPromise(wrappedPromise)
+      })
+  }
+
+  _getGeocoding = () => {
+    this.setState({
+      errorGeocode: false
+    }, () => {
+      const { position } = this.state
+      const wrappedPromise = cancellablePromise(getGeocoding(position))
+      this.appendPendingPromise(wrappedPromise)
+      wrappedPromise.promise
+        .then(geocode => {
+          let poi = getAddressComponents(geocode)
+          let filter = geocode.results.filter(g => {
+            return g.types.indexOf('route') > -1
+          })
+          filter = filter[0].address_components.filter(f => {
+            return f.types.indexOf('administrative_area_level_2') > -1
+          })
+          let cityName = filter[0].short_name
+          this.setState({
+            currentLocation: {
+              poi: poi[0],
+              cityName: cityName,
+              fullAddress: poi[1]
+            }
+          }, () => {
+            this._getCollection()
+          })
+        })
+        .then(() => {
+          this.removePendingPromise(wrappedPromise)
+        })
+        .catch((error) => {
+          this.setState({
+            errorGeocode: true
+          })
+        })
+    })
+  }
+
+  _getCollection = () => {
+    this.setState({
+      errorCollection: false
+    }, () => {
+      const wrappedPromise = cancellablePromise(this._promiseCollection())
+      this.appendPendingPromise(wrappedPromise)
+      wrappedPromise.promise
+        .then(data => {
+          this.setState({
+            emptyCollection: data.length <= 0 ? true : false,
+            collection: data
+          }, () => {
+            this.dataCart()
+          })
+        })
+        .then(() => {
+          this.removePendingPromise(wrappedPromise)
+        })
+        .catch(error => {
+          this.setState({
+            errorCollection: true
+          })
+        })
+    })
+  }
+
+  _promiseCollection = () => {
+    return new Promise((resolve, reject) => {
+      const { currentLocation, position } = this.state
+      const cityName = encodeURI(currentLocation.cityName)
+      fetch(`${HOST_REST_API}food/collection?kota=${cityName}&koordinat=${position.latitude},${position.longitude}`)
+        .then(res => res.json())
+        .then(resolve)
+        .catch(reject)
+    })
+  }
+
+  _navigate = (screen, data = {}, params = {}) => {
+    this.props.navigation.navigate(screen, {
+      statusbar: {
+        barStyle: 'dark-content',
+        background: Color.white
+      },
+      actionBack: this.dataCart,
+      data: {
+        position: this.state.position,
+        ...data
+      },
+      ...params
+    })
+  }
+
+  layout = event => {
+    let heightLay = event.nativeEvent.layout.height
+    this.setState({
+      wrapperHeight: heightLay
+    })
+
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.state.scrollEnd != nextState.scrollEnd) {
+      return false
+    }
+    return true
+  }
+
+  _momentumScrollBegin = (e) => {
+    if (this.state.carts.length > 0) {
+      if (e.nativeEvent.contentOffset.y > this.state.scrollEnd || e.nativeEvent.contentOffset.y >= (this.state.wrapperHeight - height)) {
+        Animated.timing(this.state.wrapperCart, {
+          duration: 250,
+          toValue: 100,
+          easing: Easing.inOut(Easing.ease),
+        }).start()
+      } else {
+        Animated.timing(this.state.wrapperCart, {
+          duration: 250,
+          toValue: 0,
+          easing: Easing.inOut(Easing.ease),
+        }).start()
+      }
+    }
+  }
+
+  _momentumScrollEnd = (e) => {
+    this.state.scrollEnd !== e.nativeEvent.contentOffset.y &&
+      this.setState({
+        scrollEnd: e.nativeEvent.contentOffset.y
+      })
+  }
+
+  _selectLocation = (position) => {
+    this.setState({
+      collection: [],
+      position: {
+        latitude: position.geometry.latitude,
+        longitude: position.geometry.longitude
+      }
+    }, () => {
+      this._getGeocoding()
+    })
+  }
+
+  render() {
+    const heightTitleLocation = Animated.interpolate(this.state.scrollY, {
+      inputRange: [0, 50],
+      outputRange: [20, 0],
+      extrapolate: 'clamp'
+    })
+    const opacityTitleLocation = Animated.interpolate(this.state.scrollY, {
+      inputRange: [0, 50],
+      outputRange: [1, 0],
+      extrapolate: 'clamp'
+    })
+    const elevationHeader = Animated.interpolate(this.state.scrollY, {
+      inputRange: [0, 50],
+      outputRange: [0, 10],
+      extrapolate: 'clamp'
+    })
+    const opacityChevron = Animated.interpolate(this.state.scrollY, {
+      inputRange: [0, 50],
+      outputRange: [0, 1],
+      extrapolate: 'clamp'
+    })
+    return (
+      <SafeAreaView style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <View style={{ position: 'absolute', top: StatusBar.currentHeight, left: 0, right: 0, height: 3, zIndex: 99 }}>
+            <TouchableOpacity activeOpacity={1} style={{ flex: 1 }} onPress={() => this.props.navigation.navigate('Koma')}></TouchableOpacity>
+          </View>
+          <Animated.View style={{ flexDirection: 'column', position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: Color.white, zIndex: 10, elevation: elevationHeader }}>
+            <View style={{ flexDirection: 'row', paddingHorizontal: 15, paddingTop: StatusBar.currentHeight + 5, paddingBottom: 5 }}>
+              <View style={{ justifyContent: 'center' }}>
+                {
+                  Platform.OS === 'android' ?
+                    <TouchableNativeFeedback
+                      onPress={() => this.props.navigation.goBack()}
+                      useForeground={true}
+                      background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
+                    >
+                      <View style={{ height: 40, width: 40, borderRadius: 40 / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+                        <Fa size={18} name="chevron-left" />
+                      </View>
+                    </TouchableNativeFeedback>
+                    :
+                    <TouchableHighlight
+                      style={{ borderRadius: 40 / 2 }}
+                      activeOpacity={0.85}
+                      underlayColor='#fff'
+                      onPress={() => this.props.navigation.goBack()}
+                    >
+                      <View style={{ height: 40, width: 40, borderRadius: 40 / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+                        <Fa size={18} name="chevron-left" />
+                      </View>
+                    </TouchableHighlight>
+                }
+              </View>
+              {
+                Platform.OS === 'android' ?
+                  <TouchableNativeFeedback
+                    useForeground={true}
+                    background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
+                    onPress={() => {
+                      this._navigate('MapSelecting', null, {
+                        selectLocation: this._selectLocation,
+                        selectedLocation: {
+                          latitude: this.state.position.latitude,
+                          longitude: this.state.position.longitude
+                        }
+                      })
+                    }}
+                  >
+                    <View style={{ flexDirection: 'column', paddingVertical: 5, overflow: 'hidden', borderRadius: 5, paddingHorizontal: 10, justifyContent: 'center' }}>
+                      <Animated.View style={{ flexDirection: 'row', justifyContent: 'flex-start', overflow: 'hidden', height: heightTitleLocation, opacity: opacityTitleLocation, alignItems: 'center' }}>
+                        <Text>Lokasimu</Text>
+                        <Evil size={22} color={Color.red} name='chevron-down' />
+                      </Animated.View>
+                      {
+                        this.state.currentLocation == null ?
+                          !this.state.errorLocation ?
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                              <Text style={{ paddingRight: 8, color: Color.textMuted }}>Mendapatkan lokasi saat ini</Text>
+                              <ActivityIndicator size="small" color={Color.secondary} />
+                            </View>
+                            :
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                              <Text style={{ paddingRight: 8, color: Color.danger }}>Gagal mendapatkan lokasi saat ini</Text>
+                            </View>
+
+                          :
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>{this.state.currentLocation.poi}</Text>
+                            <Animated.View style={{ opacity: opacityChevron, marginLeft: 3 }}>
+                              <Feather size={15} color={Color.red} name='chevron-down' />
+                            </Animated.View>
+                          </View>
+                      }
+                    </View>
+                  </TouchableNativeFeedback>
+                  :
+                  <TouchableHighlight
+                    style={{ borderRadius: 5 }}
+                    activeOpacity={0.85}
+                    underlayColor='#fff'
+                    onPress={() => {
+                      this._navigate('MapSelecting', null, {
+                        selectLocation: this._selectLocation,
+                        selectedLocation: {
+                          latitude: this.state.position.latitude,
+                          longitude: this.state.position.longitude
+                        }
+                      })
+                    }}
+                  >
+                    <View style={{ flexDirection: 'column', paddingVertical: 5, overflow: 'hidden', borderRadius: 5, paddingHorizontal: 10, justifyContent: 'center' }}>
+                      <Animated.View style={{ flexDirection: 'row', justifyContent: 'flex-start', overflow: 'hidden', height: heightTitleLocation, opacity: opacityTitleLocation, alignItems: 'center' }}>
+                        <Text>Lokasimu</Text>
+                        <Evil size={22} color={Color.red} name='chevron-down' />
+                      </Animated.View>
+                      {
+                        this.state.currentLocation == null ?
+                          !this.state.errorLocation ?
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                              <Text style={{ paddingRight: 8, color: Color.textMuted }}>Mendapatkan lokasi saat ini</Text>
+                              <ActivityIndicator size="small" color={Color.secondary} />
+                            </View>
+                            :
+                            <View style={{ flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center' }}>
+                              <Text style={{ paddingRight: 8, color: Color.danger }}>Gagal mendapatkan lokasi saat ini</Text>
+                            </View>
+
+                          :
+                          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <Text numberOfLines={1} style={{ fontWeight: 'bold' }}>{this.state.currentLocation.poi}</Text>
+                            <Animated.View style={{ opacity: opacityChevron, marginLeft: 3 }}>
+                              <Feather size={15} color={Color.red} name='chevron-down' />
+                            </Animated.View>
+                          </View>
+                      }
+                    </View>
+                  </TouchableHighlight>
+              }
+              {/* <View style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, paddingRight: 0 }}>
+                <TouchableNativeFeedback
+                  useForeground={true}
+                  background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
+                >
+                  <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 15, overflow: 'hidden' }}>
+                    <Feather name="heart" size={20} />
+                  </View>
+                </TouchableNativeFeedback>
+              </View> */}
+            </View>
+            {
+              this.state.collection.length
+                ?
+                <View>
+                  {
+                    Platform.OS === 'android' ?
+                      <TouchableNativeFeedback
+                        useForeground
+                        background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.05)', false)}
+                        onPress={() => {
+                          this._navigate('SearchMenu', {
+                            cityName: this.state.currentLocation.cityName,
+                            position: this.state.position
+                          })
+                        }}
+                      >
+                        <View style={{ height: 40, overflow: 'hidden', backgroundColor: Color.grayLighter, marginHorizontal: 15, borderRadius: 10, flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                          <View style={{ height: 40, width: 40, alignItems: 'center', justifyContent: 'center' }}>
+                            <Feather name='search' color={Color.textMuted} size={16} />
+                          </View>
+                          <Text style={{ color: Color.textMuted, paddingHorizontal: 6, paddingRight: 10, letterSpacing: 1 }}>Mau makan apa hari ini?</Text>
+                        </View>
+                      </TouchableNativeFeedback>
+                      :
+                      <TouchableHighlight
+                        style={{ borderRadius: 10 }}
+                        activeOpacity={0.85}
+                        underlayColor='#fff'
+                        onPress={() => {
+                          this._navigate('SearchMenu', {
+                            cityName: this.state.currentLocation.cityName,
+                            position: this.state.position
+                          })
+                        }}
+                      >
+                        <View style={{ height: 40, overflow: 'hidden', backgroundColor: Color.grayLighter, marginHorizontal: 15, borderRadius: 10, flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                          <View style={{ height: 40, width: 40, alignItems: 'center', justifyContent: 'center' }}>
+                            <Feather name='search' color={Color.textMuted} size={16} />
+                          </View>
+                          <Text style={{ color: Color.textMuted, paddingHorizontal: 6, paddingRight: 10, letterSpacing: 1 }}>Mau makan apa hari ini?</Text>
+                        </View>
+                      </TouchableHighlight>
+                  }
+                </View>
+                :
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    backgroundColor: Color.grayLighter,
+                    borderRadius: 10,
+                    paddingHorizontal: 15,
+                    marginHorizontal: 15,
+                    marginBottom: 10,
+                    opacity: this.state.emptyCollection || this.state.errorCollection || this.state.errorGeocode || this.state.errorLocation ? .35 : 1
+                  }}
+                >
+                  <View
+                    style={{ flex: 1, height: 40 }}
+                  ></View>
+                </View>
+            }
+          </Animated.View>
+          <View style={{ flex: 1 }}>
+            {
+              this.state.collection.length ?
+                <Animated.ScrollView
+                  ref={this.scrollRef}
+                  showsVerticalScrollIndicator={false}
+                  bounces={false}
+                  onMomentumScrollBegin={this._momentumScrollBegin}
+                  onMomentumScrollEnd={this._momentumScrollEnd}
+                  scrollEventThrottle={16}
+                  onScroll={Animated.event([
+                    {
+                      nativeEvent: { contentOffset: { y: this.state.scrollY } }
+                    }
+                  ])}
+                >
+                  <View
+                    style={{ paddingTop: 135, flex: 1 }}
+                    onLayout={this.layout}
+                  >
+                    <FoodHome currentLocation={this.state.currentLocation} position={this.state.position} collection={this.state.collection} _navigate={this._navigate} />
+                  </View>
+                </Animated.ScrollView>
+                :
+                <View style={{ flex: 1, overflow: 'hidden', paddingTop: 135, position: 'relative' }}>
+                  <DummySliderCard />
+                  <DummyItems />
+                  <DummyItems horizontal />
+                  {
+                    this.state.emptyCollection &&
+                    <View style={{ position: 'absolute', top: 0, right: 0, left: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.75)', paddingHorizontal: 30 }}>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Belum tersedia</Text>
+                      <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Maaf belum ada resto yang buka di sekitar sini, silakan coba lagi lain waktu!</Text>
+                    </View>
+                  }
+                  {
+                    this.state.errorLocation &&
+                    <View style={{ position: 'absolute', top: 0, right: 0, left: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.75)', paddingHorizontal: 30 }}>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan lokasi saat ini</Text>
+                      <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                      <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
+                        <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
+                        <Button style={{ marginHorizontal: 5 }} onPress={this._getLocation} red title='Coba lagi' />
+                      </View>
+                    </View>
+                  }
+                  {
+                    this.state.errorGeocode &&
+                    <View style={{ position: 'absolute', top: 0, right: 0, left: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.75)', paddingHorizontal: 30 }}>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan info lokasi</Text>
+                      <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                      <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
+                        <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
+                        <Button style={{ marginHorizontal: 5 }} onPress={this._getGeocoding} red title='Coba lagi' />
+                      </View>
+                    </View>
+                  }
+                  {
+                    this.state.errorCollection &&
+                    <View style={{ position: 'absolute', top: 0, right: 0, left: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.75)', paddingHorizontal: 30 }}>
+                      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan resto</Text>
+                      <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                      <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
+                        <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
+                        <Button style={{ marginHorizontal: 5 }} onPress={this._getCollection} red title='Coba lagi' />
+                      </View>
+                    </View>
+                  }
+                </View>
+            }
+
+          </View>
+          <Animated.View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', transform: [{ translateY: this.state.wrapperCart }] }}>
+            {
+              Platform.OS === 'android' ?
+                <TouchableNativeFeedback
+                  onPress={() => this._navigate('Order', null)}
+                  useForeground={true}
+                  background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
+                >
+                  <View style={{ padding: 10, borderRadius: 4, elevation: 3, backgroundColor: Color.primary, margin: 15 }}>
+                    {
+                      this.state.carts.length > 0 ?
+                        <View style={{ flexDirection: 'row', overflow: 'hidden' }}>
+                          <View style={{ flex: 1, paddingLeft: 5 }}>
+                            <Text style={{ fontWeight: 'bold', color: colorYiq(Color.primary), fontSize: 12 }}>{
+                              this.state.carts.length > 0 ?
+                                this.state.carts.reduce((a, b) => {
+                                  return a + b.qty
+                                }, 0)
+                                : 0
+                            } item | {
+                                Currency(
+                                  this.state.carts.length > 0 ?
+                                    this.state.carts.reduce((a, b) => {
+                                      return a + b.qty * b.foodPrice
+                                    }, 0)
+                                    : 0
+                                )
+                              } (est)</Text>
+                            <Text style={{ fontSize: 11, color: colorYiq(Color.primary) }}>{
+                              this.state.carts.length > 0
+                                ? this.state.carts[0].merchantName
+                                : 'Tidak ada merchant'
+                            }</Text>
+                          </View>
+                          <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                            <Feather color={colorYiq(Color.primary)} size={18} name='shopping-bag' />
+                          </View>
+                        </View>
+                        : null
+                    }
+                  </View>
+                </TouchableNativeFeedback>
+                :
+                <TouchableHighlight
+                  onPress={() => this._navigate('Order', null)}
+                  activeOpacity={0.85}
+                  underlayColor='#fff'
+                  style={{ borderRadius: 4, margin: 15 }}
+                >
+                  <View style={{ padding: 10, borderRadius: 4, elevation: 3, backgroundColor: Color.primary }}>
+                    {
+                      this.state.carts.length > 0 ?
+                        <View style={{ flexDirection: 'row', overflow: 'hidden' }}>
+                          <View style={{ flex: 1, paddingLeft: 5 }}>
+                            <Text style={{ fontWeight: 'bold', color: colorYiq(Color.primary), fontSize: 12 }}>{
+                              this.state.carts.length > 0 ?
+                                this.state.carts.reduce((a, b) => {
+                                  return a + b.qty
+                                }, 0)
+                                : 0
+                            } item | {
+                                Currency(
+                                  this.state.carts.length > 0 ?
+                                    this.state.carts.reduce((a, b) => {
+                                      return a + b.qty * b.foodPrice
+                                    }, 0)
+                                    : 0
+                                )
+                              } (est)</Text>
+                            <Text style={{ fontSize: 11, color: colorYiq(Color.primary) }}>{
+                              this.state.carts.length > 0
+                                ? this.state.carts[0].merchantName
+                                : 'Tidak ada merchant'
+                            }</Text>
+                          </View>
+                          <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                            <Feather color={colorYiq(Color.primary)} size={18} name='shopping-bag' />
+                          </View>
+                        </View>
+                        : null
+                    }
+                  </View>
+                </TouchableHighlight>
+            }
+          </Animated.View>
+        </View>
+      </SafeAreaView>
+    )
+  }
+}
+
+export default Home
