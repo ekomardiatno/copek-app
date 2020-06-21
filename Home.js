@@ -11,6 +11,7 @@ import { AdMobBanner } from 'react-native-admob'
 import BackgroundGeolocation from '@mauron85/react-native-background-geolocation'
 import GPSState from 'react-native-gps-state'
 import PolylineEncoder from '@mapbox/polyline'
+import Dash from 'react-native-dash'
 
 class Home extends Component {
     constructor(props) {
@@ -153,7 +154,8 @@ class Home extends Component {
                             }
                         </MapView>
                     </View>
-                    <View style={{ alignItems: 'center', marginBottom: 15 }}>
+                    <Dash dashColor='#ddd' dashThickness={1} style={{width:'100%', height:1}}/>
+                    <View style={{ alignItems: 'center', marginBottom: 15, marginTop: 15 }}>
                         <View style={{ backgroundColor: '#f5f5f5', width: 300, height: 250 }}>
                             <AdMobBanner
                                 adSize="mediumRectangle"
