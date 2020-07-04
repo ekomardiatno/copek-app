@@ -94,7 +94,7 @@ class MapSelecting extends Component {
         .catch((error) => {
           Alert.alert(
             'Gagal mendapatkan lokasi terkini',
-            'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
             [
               {
                 text: 'Coba lagi',
@@ -187,7 +187,7 @@ class MapSelecting extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info lokasi',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',

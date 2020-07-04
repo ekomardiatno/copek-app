@@ -81,33 +81,57 @@ export default class Account extends Component {
             }
           </View>
           <View style={{ marginBottom: 15 }}>
-            <Menu
-              items={
-                [
-                  {
-                    title: 'Ikuti kami di Instagram',
-                    iconName: 'instagram',
-                    onPress: () => {
-                      Linking.openURL('https://instagram.com/copek_kuansing')
-                    }
-                  },
-                  {
-                    title: 'Dapatkan bantuan Admin',
-                    iconName: 'question-circle',
-                    onPress: () => {
-                      Linking.openURL('whatsapp://send?phone=+6282288369844')
-                    }
-                  },
-                  {
-                    title: 'Beri kami nilai',
-                    iconName: 'star',
-                    onPress: () => {
-                      Linking.openURL('market://details?id=com.koma.copek')
-                    }
-                  },
-                ]
-              }
-            />
+            {
+              Platform.OS === 'android' ?
+                <Menu
+                  items={
+                    [
+                      {
+                        title: 'Ikuti kami di Instagram',
+                        iconName: 'instagram',
+                        onPress: () => {
+                          Linking.openURL('https://instagram.com/copek_kuansing')
+                        }
+                      },
+                      {
+                        title: 'Dapatkan bantuan Admin',
+                        iconName: 'question-circle',
+                        onPress: () => {
+                          Linking.openURL('whatsapp://send?phone=+6282288369844')
+                        }
+                      },
+                      {
+                        title: 'Beri kami nilai',
+                        iconName: 'star',
+                        onPress: () => {
+                          Linking.openURL('market://details?id=com.koma.copek')
+                        }
+                      }
+                    ]
+                  }
+                />
+                :
+                <Menu
+                  items={
+                    [
+                      {
+                        title: 'Ikuti kami di Instagram',
+                        iconName: 'instagram',
+                        onPress: () => {
+                          Linking.openURL('https://instagram.com/copek_kuansing')
+                        }
+                      },
+                      {
+                        title: 'Dapatkan bantuan Admin',
+                        iconName: 'question-circle',
+                        onPress: () => {
+                          Linking.openURL('whatsapp://send?phone=+6282288369844')
+                        }
+                      }
+                    ]
+                  }
+                />
+            }
           </View>
           <View style={{ paddingHorizontal: 15 }}>
             <Button onPress={this._logout} red title="Keluar" />

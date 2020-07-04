@@ -23,6 +23,7 @@ import cancellablePromise from '../../helpers/cancellablePromise'
 import { HOST_REST_API } from '../../components/Define'
 import getImageThumb from '../../helpers/getImageThumb'
 const { width, height } = Dimensions.get('window')
+import Toast from 'react-native-simple-toast'
 
 export default class Merchant extends Component {
   constructor(props) {
@@ -109,7 +110,7 @@ export default class Merchant extends Component {
       .catch((error) => {
         Alert.alert(
           'Gagal mendapatkan lokasi terkini',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -170,7 +171,11 @@ export default class Merchant extends Component {
           )
         } else {
           this.props.navigation.goBack()
-          ToastAndroid.show('Toko libur hari ini', ToastAndroid.SHORT)
+          if(Platform.OS === 'android') {
+            ToastAndroid.show('Toko libur hari ini', ToastAndroid.SHORT)
+          } else {
+            Toast.show('Toko libur hari ini', Toast.SHORT)
+          }
         }
       })
       .then(() => {
@@ -179,7 +184,7 @@ export default class Merchant extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info resto',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -223,7 +228,7 @@ export default class Merchant extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan data makanan',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',

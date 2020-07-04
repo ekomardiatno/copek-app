@@ -6,6 +6,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5'
 import cancellablePromise from '../helpers/cancellablePromise'
 import AsyncStorage from '@react-native-community/async-storage'
 import { HOST_REST_API } from '../components/Define'
+import KeyboardSpacer from 'react-native-keyboard-spacer'
 
 export default class Login extends Component {
   constructor(props) {
@@ -117,7 +118,7 @@ export default class Login extends Component {
         .catch((error) => {
           Alert.alert(
             'Gagal masuk',
-            'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
             [
               {
                 text: 'Coba lagi',
@@ -300,6 +301,10 @@ export default class Login extends Component {
               </TouchableOpacity>
             </View>
           </SafeAreaView>
+          {
+            Platform.OS === 'ios' &&
+              <KeyboardSpacer/>
+          }
         </View>
         : null
     )

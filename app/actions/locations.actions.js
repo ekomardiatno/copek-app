@@ -3,17 +3,13 @@ export const DATA_PLACES = 'DATA_PLACES'
 
 export const setCurrentPosition = (position) => {
   let promise = new Promise((resolve, reject) => {
-    if(position.accuracy <= 100) {
-      AsyncStorage.setItem('currentLocation', JSON.stringify(position), (error) => {
-        if(!error) {
-          resolve(position)
-        } else {
-          reject(error)
-        }
-      })
-    } else {
-      reject({status: 'error'})
-    }
+    AsyncStorage.setItem('currentLocation', JSON.stringify(position), (error) => {
+      if(!error) {
+        resolve(position)
+      } else {
+        reject(error)
+      }
+    })
   })
 
   return promise

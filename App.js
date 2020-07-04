@@ -12,7 +12,8 @@ import cancellablePromise from './app/helpers/cancellablePromise'
 import { HOST_REST_API } from './app/components/Define'
 
 YellowBox.ignoreWarnings([
-  'Unrecognized WebSocket connection option(s) `agent`, `perMessageDeflate`, `pfx`, `key`, `passphrase`, `cert`, `ca`, `ciphers`, `rejectUnauthorized`. Did you mean to put these under `headers`?', 'Possible Unhandled Promise Rejection'
+  'Unrecognized WebSocket connection option(s) `agent`, `perMessageDeflate`, `pfx`, `key`, `passphrase`, `cert`, `ca`, `ciphers`, `rejectUnauthorized`. Did you mean to put these under `headers`?', 'Possible Unhandled Promise Rejection',
+  'Animated: `useNativeDriver` was not specified.'
 ])
 
 if (
@@ -223,25 +224,41 @@ class App extends Component {
           return item.appVersionName
         }).indexOf(version)
         if (index < 0) {
-          Alert.alert(
-            'Aplikasi tidak bisa digunakan',
-            'Mohon untuk mengupdate aplikasi ke versi terbaru',
-            [
-              {
-                text: 'Keluar',
-                onPress: () => {
-                  BackHandler.exitApp()
+          if(Platform.OS === 'android') {
+            Alert.alert(
+              'Aplikasi telah diperbarui',
+              'Silakan perbarui aplikasi ke versi terbaru',
+              [
+                {
+                  text: 'Keluar',
+                  onPress: () => {
+                    BackHandler.exitApp()
+                  }
+                },
+                {
+                  text: 'Perbarui',
+                  onPress: () => {
+                    BackHandler.exitApp()
+                    Linking.openURL('market://details?id=com.koma.copek')
+                  }
                 }
-              },
-              {
-                text: 'Perbarui',
-                onPress: () => {
-                  BackHandler.exitApp()
-                  Linking.openURL('market://details?id=com.koma.copek')
+              ]
+            )
+          } else {
+            Alert.alert(
+              'Aplikasi telah diperbarui',
+              'Silakan perbarui aplikasi ke versi terbaru',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    BackHandler.exitApp()
+                  }
                 }
-              }
-            ]
-          )
+              ],
+              { cancelable: false }
+            )
+          }
         }
       })
       .then(() => {

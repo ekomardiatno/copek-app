@@ -355,14 +355,14 @@ class Home extends Component {
                 <Spinner
                   type='Circle'
                   color={Color.white}
-                  size={35}
+                  size={Platform.OS === 'ios' ? 28 : 35}
                   isVisible={this.state.geocode != null && this.state.currentLocation ? false : true}
                 />
               </View>
             </View>
           </View>
         </View>
-        <SafeAreaView
+        <View
           style={{
             position: 'absolute',
             bottom: 0,
@@ -371,115 +371,117 @@ class Home extends Component {
             elevation: 5
           }}
         >
-          {
-            this.state.errorLocation &&
-            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Color.white, zIndex: 20, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan lokasi saat ini</Text>
-              <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
-              <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
-                <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
-                <Button style={{ marginHorizontal: 5 }} onPress={this._mapReady} red title='Coba lagi' />
+          <SafeAreaView>
+            {
+              this.state.errorLocation &&
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Color.white, zIndex: 20, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan lokasi saat ini</Text>
+                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
+                  <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
+                  <Button style={{ marginHorizontal: 5 }} onPress={this._mapReady} red title='Coba lagi' />
+                </View>
               </View>
-            </View>
-          }
-          {
-            this.state.errorGeocode &&
-            <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Color.white, zIndex: 20, alignItems: 'center', justifyContent: 'center' }}>
-              <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan info lokasi</Text>
-              <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
-              <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
-                <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
-                <Button style={{ marginHorizontal: 5 }} onPress={this._getGeocode} red title='Coba lagi' />
+            }
+            {
+              this.state.errorGeocode &&
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Color.white, zIndex: 20, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan info lokasi</Text>
+                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
+                  <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
+                  <Button style={{ marginHorizontal: 5 }} onPress={this._getGeocode} red title='Coba lagi' />
+                </View>
               </View>
-            </View>
-          }
-          <View style={{ backgroundColor: Color.white, paddingHorizontal: 15, position: 'relative' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5, marginBottom: 5 }}>
-              <View style={{ flex: 1, flexDirection: 'row' }}>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', paddingRight: 10 }}>{
-                  this.state.destination == null
-                    ?
-                    'Set lokasi tujuan'
-                    :
-                    'Set lokasi jemput'
-                }</Text>
-                {
-                  this.state.geocode != null && this.state.currentLocation
-                    ?
-                    null
-                    :
-                    <ActivityIndicator size='small' color={Color.secondary} />
-                }
-              </View>
-              <View style={{ width: 40, height: 40 }}>
-                {
-                  this.state.geocode != null && this.state.currentLocation
-                    ?
-                    <TouchableNativeFeedback
-                      onPress={() => this._navigate('SearchPlaces')}
-                      useForeground={true}
-                      background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
-                    >
-                      <View style={{ width: 40, height: 40, borderRadius: 40 / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
-                        <Ion size={20} name='ios-search' />
-                      </View>
-                    </TouchableNativeFeedback>
-                    :
-                    null
-                }
-              </View>
-            </View>
-            <View style={{ flexDirection: 'row', marginBottom: 20, height: 70, overflow: 'hidden' }}>
-              <View>
-                {
-                  this.state.geocode != null && this.state.currentLocation
-                    ?
+            }
+            <View style={{ backgroundColor: Color.white, paddingHorizontal: 15, position: 'relative' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5, marginBottom: 5 }}>
+                <View style={{ flex: 1, flexDirection: 'row' }}>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', paddingRight: 10 }}>{
                     this.state.destination == null
                       ?
-                      <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 30 / 2, backgroundColor: Color.secondary }}>
-                        <Fa color={Color.white} size={18} name="map-marker-alt" />
+                      'Set lokasi tujuan'
+                      :
+                      'Set lokasi jemput'
+                  }</Text>
+                  {
+                    this.state.geocode != null && this.state.currentLocation
+                      ?
+                      null
+                      :
+                      <ActivityIndicator size='small' color={Color.secondary} />
+                  }
+                </View>
+                <View style={{ width: 40, height: 40 }}>
+                  {
+                    this.state.geocode != null && this.state.currentLocation
+                      ?
+                      <TouchableNativeFeedback
+                        onPress={() => this._navigate('SearchPlaces')}
+                        useForeground={true}
+                        background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
+                      >
+                        <View style={{ width: 40, height: 40, borderRadius: 40 / 2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+                          <Ion size={20} name='ios-search' />
+                        </View>
+                      </TouchableNativeFeedback>
+                      :
+                      null
+                  }
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', marginBottom: 20, height: 70, overflow: 'hidden' }}>
+                <View>
+                  {
+                    this.state.geocode != null && this.state.currentLocation
+                      ?
+                      this.state.destination == null
+                        ?
+                        <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 30 / 2, backgroundColor: Color.secondary }}>
+                          <Fa color={Color.white} size={18} name="map-marker-alt" />
+                        </View>
+                        :
+                        <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 30 / 2, backgroundColor: Color.blue }}>
+                          <Fa color={Color.white} size={18} name="user" />
+                        </View>
+                      :
+                      <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 30 / 2, backgroundColor: Color.grayLighter }}>
+                      </View>
+                  }
+                </View>
+                <View style={{ flex: 1, paddingLeft: 10 }}>
+                  {
+                    this.state.geocode != null && this.state.currentLocation
+                      ?
+                      <View>
+                        <Text numberOfLines={1} style={{ fontWeight: 'bold', lineHeight: 20, marginBottom: 3 }}>{this.state.geocode.title}</Text>
+                        <Text numberOfLines={2} style={{ lineHeight: 20 }}>{this.state.geocode.address}</Text>
                       </View>
                       :
-                      <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 30 / 2, backgroundColor: Color.blue }}>
-                        <Fa color={Color.white} size={18} name="user" />
+                      <View>
+                        <View style={{ width: 70, height: 15, marginBottom: 10, backgroundColor: Color.grayLighter, borderRadius: 4 }}></View>
+                        <View style={{ width: '100%', height: 15, marginBottom: 10, backgroundColor: Color.grayLighter, borderRadius: 4 }}></View>
+                        <View style={{ width: 80, height: 15, marginBottom: 10, backgroundColor: Color.grayLighter, borderRadius: 4 }}></View>
                       </View>
-                    :
-                    <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 30 / 2, backgroundColor: Color.grayLighter }}>
-                    </View>
-                }
+                  }
+                </View>
               </View>
-              <View style={{ flex: 1, paddingLeft: 10 }}>
+              <View style={{ marginBottom: 15 }}>
                 {
                   this.state.geocode != null && this.state.currentLocation
                     ?
-                    <View>
-                      <Text numberOfLines={1} style={{ fontWeight: 'bold', lineHeight: 20, marginBottom: 3 }}>{this.state.geocode.title}</Text>
-                      <Text numberOfLines={2} style={{ lineHeight: 20 }}>{this.state.geocode.address}</Text>
-                    </View>
+                    this.state.destination === null
+                      ?
+                      <Button title='Set lokasi tujuan' onPress={this._setDestination} style={{ flex: 1 }} />
+                      :
+                      <Button blue title='Set lokasi jemput' onPress={this._setOrigin} style={{ flex: 1 }} />
                     :
-                    <View>
-                      <View style={{ width: 70, height: 15, marginBottom: 10, backgroundColor: Color.grayLighter, borderRadius: 4 }}></View>
-                      <View style={{ width: '100%', height: 15, marginBottom: 10, backgroundColor: Color.grayLighter, borderRadius: 4 }}></View>
-                      <View style={{ width: 80, height: 15, marginBottom: 10, backgroundColor: Color.grayLighter, borderRadius: 4 }}></View>
-                    </View>
+                    <Button title=' ' style={{ flex: 1, backgroundColor: Color.grayLighter, elevation: 0 }} />
                 }
               </View>
             </View>
-            <View style={{ marginBottom: 15 }}>
-              {
-                this.state.geocode != null && this.state.currentLocation
-                  ?
-                  this.state.destination === null
-                    ?
-                    <Button title='Set lokasi tujuan' onPress={this._setDestination} style={{ flex: 1 }} />
-                    :
-                    <Button blue title='Set lokasi jemput' onPress={this._setOrigin} style={{ flex: 1 }} />
-                  :
-                  <Button title=' ' style={{ flex: 1, backgroundColor: Color.grayLighter, elevation: 0 }} />
-              }
-            </View>
-          </View>
-        </SafeAreaView>
+          </SafeAreaView>
+        </View>
       </View>
     )
   }

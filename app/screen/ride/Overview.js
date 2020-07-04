@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import { View, Text, StatusBar, TouchableNativeFeedback, Image, ScrollView, Alert, ToastAndroid, Platform, TouchableHighlight, SafeAreaView } from 'react-native'
+import { View, Text, StatusBar, TouchableNativeFeedback, Image, ScrollView, Alert, ToastAndroid, Platform, TouchableHighlight, SafeAreaView, ActivityIndicator } from 'react-native'
 import Feather from 'react-native-vector-icons/Feather'
 import Fa from 'react-native-vector-icons/FontAwesome5'
 import Ion from 'react-native-vector-icons/Ionicons'
-import Color from '../../components/Color'
+import Color, { colorYiq } from '../../components/Color'
 import { Input, Button, Card, SimpleHeader, DummyFareRide } from '../../components/Components'
 import Currency from '../../helpers/Currency'
 import DistanceFormat from '../../helpers/DistanceFormat'
@@ -14,7 +14,9 @@ import Polyline from '@mapbox/polyline'
 import cancellablePromise from '../../helpers/cancellablePromise'
 import { getDistanceMatrix, getDirections } from '../../actions/locations.actions'
 import { getFare } from '../../actions/fare.actions'
-import { LATITUDE_DELTA, LONGITUDE_DELTA } from '../../components/Define'
+import { LATITUDE_DELTA, LONGITUDE_DELTA, HOST_REST_API } from '../../components/Define'
+import Toast from 'react-native-simple-toast'
+import KeyboardSpacer from 'react-native-keyboard-spacer'
 
 class Overview extends Component {
   constructor(props) {
@@ -32,7 +34,8 @@ class Overview extends Component {
       destination: null,
       mapView: true,
       note: '',
-      fare: 0
+      fare: 0,
+      bookingLoading: false
     }
   }
 
@@ -101,7 +104,7 @@ class Overview extends Component {
       .catch((error) => {
         Alert.alert(
           'Gagal mendapatkan rute',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -139,7 +142,7 @@ class Overview extends Component {
       .catch((error) => {
         Alert.alert(
           'Gagal menghitung jarak',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -216,6 +219,48 @@ class Overview extends Component {
   }
 
   _booking = () => {
+    this.setState({
+      bookingLoading: true
+    })
+    const wrappedPromise = cancellablePromise(this._promiseCheckOrderStatus())
+    this.appendPendingPromise(wrappedPromise)
+    wrappedPromise.promise
+      .then(res => {
+        if (res.length > 0) {
+          for (let i = 0; i < res.length; i++) {
+            AsyncStorage.getItem('orders', (err, order) => {
+              if (order !== null) {
+                order = JSON.parse(order)
+                let index = order.map(item => {
+                  return item.orderId
+                }).indexOf(res[i].orderId.toString())
+                if (res[i].status !== null) {
+                  order[index].status = res[i].status
+                } else {
+                  order.splice(index, 1)
+                }
+                AsyncStorage.setItem('orders', JSON.stringify(order), error => {
+                  if (i + 1 >= res.length) {
+                    this._checkOrderUnfinishedAndBooking()
+                  }
+                })
+              }
+            })
+          }
+        } else {
+          this._checkOrderUnfinishedAndBooking()
+        }
+      })
+      .then(() => this.removePendingPromise(wrappedPromise))
+      .catch(err => {
+        Alert.alert(
+          'Gagal membuat pesanan',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi'
+        )
+      })
+  }
+
+  _checkOrderUnfinishedAndBooking = () => {
     AsyncStorage.getItem('orders', async function (err, orders) {
       let length = 0, array = []
       if (orders !== null) {
@@ -228,9 +273,12 @@ class Overview extends Component {
         length = array.length
       }
       if (length > 0) {
-        ToastAndroid.show('Anda memiliki pesanan yang belum selesai', ToastAndroid.SHORT)
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Anda memiliki pesanan yang belum selesai', ToastAndroid.SHORT)
+        } else {
+          Toast.show('Anda memiliki pesanan yang belum selesai', Toast.SHORT)
+        }
       } else {
-        // ToastAndroid.show('Semua pesanan sudah selesai', ToastAndroid.SHORT)
         this._navigate('Booking', {
           orderType: 'RIDE',
           origin: this.state.origin,
@@ -240,7 +288,43 @@ class Overview extends Component {
           note: this.state.note
         })
       }
+      this.setState({
+        bookingLoading: false
+      })
     }.bind(this))
+  }
+
+  _promiseCheckOrderStatus = () => {
+    return new Promise((resolve, reject) => {
+      AsyncStorage.getItem('orders', (error, result) => {
+        if (!error && result !== null) {
+          result = JSON.parse(result)
+          let filtered = result.filter(a => {
+            return a.status !== 'completed' && a.status !== 'cancelled_by_user' && a.status !== 'cancelled_by_driver'
+          })
+          if (filtered.length > 0) {
+            filtered = filtered.map(a => {
+              return a.orderId
+            })
+            fetch(`${HOST_REST_API}order/checking`, {
+              method: 'post',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(filtered)
+            })
+              .then(res => res.json())
+              .then(resolve)
+              .catch(reject)
+          } else {
+            resolve([])
+          }
+        } else {
+          resolve([])
+        }
+      })
+    })
   }
 
   render() {
@@ -294,7 +378,7 @@ class Overview extends Component {
         {
           this.state.distances
             ?
-            <SafeAreaView
+            <View
               style={{
                 position: 'absolute',
                 bottom: 0,
@@ -303,161 +387,174 @@ class Overview extends Component {
                 elevation: 5
               }}
             >
-              <View style={{ paddingTop: 10, paddingBottom: 15, }}>
-                <View style={{ borderBottomWidth: 5, borderBottomColor: Color.grayLighter }}>
-                  <View style={{ marginBottom: 8 }}>
-                    {
-                      Platform.OS === 'android' ?
-                        <TouchableNativeFeedback
-                          useForeground={true}
-                          background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
-                          onPress={() => {
-                            this._navigate('MapSelecting', {
-                              selectLocation: this._changeOrigin,
-                              selectType: 'pickup',
-                              selectedLocation: this.state.origin.geometry
-                            })
-                          }}
-                        >
-                          <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
-                            <View>
-                              <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.blue }}>
-                                <Fa color={Color.white} size={18} name="user" />
+              <SafeAreaView>
+                <View style={{ paddingTop: 10, paddingBottom: 15, }}>
+                  <View style={{ borderBottomWidth: 5, borderBottomColor: Color.grayLighter }}>
+                    <View style={{ marginBottom: 8 }}>
+                      {
+                        Platform.OS === 'android' ?
+                          <TouchableNativeFeedback
+                            useForeground={true}
+                            background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
+                            onPress={() => {
+                              this._navigate('MapSelecting', {
+                                selectLocation: this._changeOrigin,
+                                selectType: 'pickup',
+                                selectedLocation: this.state.origin.geometry
+                              })
+                            }}
+                          >
+                            <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
+                              <View>
+                                <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.blue }}>
+                                  <Fa color={Color.white} size={18} name="user" />
+                                </View>
+                              </View>
+                              <View style={{ paddingHorizontal: 10, flex: 1 }}>
+                                <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi jemput</Text>
+                                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.origin.geocode.title}</Text>
+                                {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Jl. Nusa Indah, Sungai Dawu, Rengat Bar., Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
+                              </View>
+                              <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                                <Fa color={Color.gray} name='chevron-right' />
                               </View>
                             </View>
-                            <View style={{ paddingHorizontal: 10, flex: 1 }}>
-                              <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi jemput</Text>
-                              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.origin.geocode.title}</Text>
-                              {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Jl. Nusa Indah, Sungai Dawu, Rengat Bar., Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
-                            </View>
-                            <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
-                              <Fa color={Color.gray} name='chevron-right' />
-                            </View>
-                          </View>
-                        </TouchableNativeFeedback>
-                        :
-                        <TouchableHighlight
-                          onPress={() => {
-                            this._navigate('MapSelecting', {
-                              selectLocation: this._changeOrigin,
-                              selectType: 'pickup',
-                              selectedLocation: this.state.origin.geometry
-                            })
-                          }}
-                          activeOpacity={0.85}
-                          underlayColor='#fff'
-                        >
-                          <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
-                            <View>
-                              <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.blue }}>
-                                <Fa color={Color.white} size={18} name="user" />
+                          </TouchableNativeFeedback>
+                          :
+                          <TouchableHighlight
+                            onPress={() => {
+                              this._navigate('MapSelecting', {
+                                selectLocation: this._changeOrigin,
+                                selectType: 'pickup',
+                                selectedLocation: this.state.origin.geometry
+                              })
+                            }}
+                            activeOpacity={0.85}
+                            underlayColor='#fff'
+                          >
+                            <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
+                              <View>
+                                <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.blue }}>
+                                  <Fa color={Color.white} size={18} name="user" />
+                                </View>
+                              </View>
+                              <View style={{ paddingHorizontal: 10, flex: 1 }}>
+                                <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi jemput</Text>
+                                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.origin.geocode.title}</Text>
+                                {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Jl. Nusa Indah, Sungai Dawu, Rengat Bar., Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
+                              </View>
+                              <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                                <Fa color={Color.gray} name='chevron-right' />
                               </View>
                             </View>
-                            <View style={{ paddingHorizontal: 10, flex: 1 }}>
-                              <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi jemput</Text>
-                              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.origin.geocode.title}</Text>
-                              {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Jl. Nusa Indah, Sungai Dawu, Rengat Bar., Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
-                            </View>
-                            <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
-                              <Fa color={Color.gray} name='chevron-right' />
-                            </View>
-                          </View>
-                        </TouchableHighlight>
-                    }
-                    {
-                      Platform.OS === 'android' ?
-                        <TouchableNativeFeedback
-                          useForeground={true}
-                          background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
-                          onPress={() => {
-                            this._navigate('MapSelecting', {
-                              selectLocation: this._changeDestination,
-                              selectedLocation: this.state.destination.geometry
-                            })
-                          }}
-                        >
-                          <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
-                            <View>
-                              <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.secondary }}>
-                                <Fa color={Color.white} size={16} name="map-marker-alt" />
+                          </TouchableHighlight>
+                      }
+                      {
+                        Platform.OS === 'android' ?
+                          <TouchableNativeFeedback
+                            useForeground={true}
+                            background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
+                            onPress={() => {
+                              this._navigate('MapSelecting', {
+                                selectLocation: this._changeDestination,
+                                selectedLocation: this.state.destination.geometry
+                              })
+                            }}
+                          >
+                            <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
+                              <View>
+                                <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.secondary }}>
+                                  <Fa color={Color.white} size={16} name="map-marker-alt" />
+                                </View>
+                              </View>
+                              <View style={{ paddingHorizontal: 10, flex: 1 }}>
+                                <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi tujuan • {DistanceFormat(this.state.distances.distance)}</Text>
+                                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.destination.geocode.title}</Text>
+                                {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Pematang Reba, Rengat Barat, Pematang Reba, Rengat Bar, Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
+                              </View>
+                              <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                                <Fa color={Color.gray} name='chevron-right' />
                               </View>
                             </View>
-                            <View style={{ paddingHorizontal: 10, flex: 1 }}>
-                              <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi tujuan • {DistanceFormat(this.state.distances.distance)}</Text>
-                              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.destination.geocode.title}</Text>
-                              {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Pematang Reba, Rengat Barat, Pematang Reba, Rengat Bar, Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
-                            </View>
-                            <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
-                              <Fa color={Color.gray} name='chevron-right' />
-                            </View>
-                          </View>
-                        </TouchableNativeFeedback>
-                        :
-                        <TouchableHighlight
-                          onPress={() => {
-                            this._navigate('MapSelecting', {
-                              selectLocation: this._changeDestination,
-                              selectedLocation: this.state.destination.geometry
-                            })
-                          }}
-                          activeOpacity={0.85}
-                          underlayColor='#fff'
-                        >
-                          <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
-                            <View>
-                              <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.secondary }}>
-                                <Fa color={Color.white} size={16} name="map-marker-alt" />
+                          </TouchableNativeFeedback>
+                          :
+                          <TouchableHighlight
+                            onPress={() => {
+                              this._navigate('MapSelecting', {
+                                selectLocation: this._changeDestination,
+                                selectedLocation: this.state.destination.geometry
+                              })
+                            }}
+                            activeOpacity={0.85}
+                            underlayColor='#fff'
+                          >
+                            <View style={{ paddingHorizontal: 15, paddingVertical: 12, flexDirection: 'row' }}>
+                              <View>
+                                <View style={{ width: 30, height: 30, alignItems: 'center', justifyContent: 'center', borderRadius: 45 / 2, backgroundColor: Color.secondary }}>
+                                  <Fa color={Color.white} size={16} name="map-marker-alt" />
+                                </View>
+                              </View>
+                              <View style={{ paddingHorizontal: 10, flex: 1 }}>
+                                <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi tujuan • {DistanceFormat(this.state.distances.distance)}</Text>
+                                <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.destination.geocode.title}</Text>
+                                {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Pematang Reba, Rengat Barat, Pematang Reba, Rengat Bar, Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
+                              </View>
+                              <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                                <Fa color={Color.gray} name='chevron-right' />
                               </View>
                             </View>
-                            <View style={{ paddingHorizontal: 10, flex: 1 }}>
-                              <Text numberOfLines={1} style={{ fontSize: 10, textTransform: 'uppercase' }}>Lokasi tujuan • {DistanceFormat(this.state.distances.distance)}</Text>
-                              <Text numberOfLines={1} style={{ fontSize: 15, fontWeight: 'bold', lineHeight: 20 }}>{this.state.destination.geocode.title}</Text>
-                              {/* <Text numberOfLines={2} style={{ fontSize: 13, color: Color.textMuted }}>Pematang Reba, Rengat Barat, Pematang Reba, Rengat Bar, Kabupaten Indragiri Hulu, Riau 29351, Indonesia</Text> */}
-                            </View>
-                            <View style={{ paddingHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
-                              <Fa color={Color.gray} name='chevron-right' />
-                            </View>
-                          </View>
-                        </TouchableHighlight>
+                          </TouchableHighlight>
 
-                    }
-                    <View style={{ position: 'absolute', left: 28.5, top: 46 }}>
-                      <View>
-                        <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: Color.grayLight, marginVertical: 2 }}></View>
-                        <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: Color.grayLight, marginVertical: 2 }}></View>
-                        <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: Color.grayLight, marginVertical: 2 }}></View>
+                      }
+                      <View style={{ position: 'absolute', left: 28.5, top: 46 }}>
+                        <View>
+                          <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: Color.grayLight, marginVertical: 2 }}></View>
+                          <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: Color.grayLight, marginVertical: 2 }}></View>
+                          <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: Color.grayLight, marginVertical: 2 }}></View>
+                        </View>
                       </View>
                     </View>
+                    <View style={{ paddingHorizontal: 15, marginBottom: 15 }}>
+                      <Input
+                        value={this.state.note}
+                        onChangeText={note => {
+                          this.setState({ note })
+                        }}
+                        feather
+                        icon="clipboard"
+                        placeholder="Tambahkan catatan untuk driver"
+                      />
+                    </View>
                   </View>
-                  <View style={{ paddingHorizontal: 15, marginBottom: 15 }}>
-                    <Input
-                      value={this.state.note}
-                      onChangeText={note => {
-                        this.setState({ note })
-                      }}
-                      feather
-                      icon="clipboard"
-                      placeholder="Tambahkan catatan untuk driver"
-                    />
-                  </View>
-                </View>
-                <View style={{ paddingHorizontal: 15, paddingTop: 10, borderTopColor: Color.borderColor, borderTopWidth: 1 }}>
-                  {/* <View style={{ flexDirection: 'row', marginBottom: 6, marginHorizontal: -3, alignItems: 'flex-start' }}>
+                  <View style={{ paddingHorizontal: 15, paddingTop: 10, borderTopColor: Color.borderColor, borderTopWidth: 1 }}>
+                    {/* <View style={{ flexDirection: 'row', marginBottom: 6, marginHorizontal: -3, alignItems: 'flex-start' }}>
                     <Text style={{ flex: 1, fontSize: 13, marginHorizontal: 3 }}>Tarif</Text>
                     <Text style={{ flex: 1, textAlign: 'right', fontSize: 13, fontWeight: 'bold', marginHorizontal: 3 }}>{Currency(this.state.distances.distance > 2000 ? (this.state.distances.distance / 2000).toFixed(0) * 5000 : 5000)}</Text>
                   </View> */}
-                  <Button
-                    onPress={this._booking}
-                    component={
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                        <Text style={{ fontSize: 13 }}>Pesan sekarang</Text>
-                        <Text style={{ fontSize: 13, fontWeight: 'bold' }}>{Currency(this.state.fare)}</Text>
-                      </View>
+                    {
+                      this.state.bookingLoading ?
+                        <View style={{ alignItems: 'center', justifyContent: 'center', borderRadius: 3, paddingHorizontal: 15, height: 40, backgroundColor: Color.primary, elevation: 3 }}>
+                          <ActivityIndicator size={19} color={colorYiq(Color.primary)} />
+                        </View>
+                        :
+                        <Button
+                          onPress={this._booking}
+                          component={
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                              <Text style={{ fontSize: 13 }}>Pesan sekarang</Text>
+                              <Text style={{ fontSize: 13, fontWeight: 'bold' }}>{Currency(this.state.fare)}</Text>
+                            </View>
+                          }
+                        />
                     }
-                  />
+                  </View>
                 </View>
-              </View>
-            </SafeAreaView>
+              </SafeAreaView>
+              {
+                Platform.OS === 'ios' &&
+                <KeyboardSpacer />
+              }
+            </View>
             :
             <DummyFareRide />
         }

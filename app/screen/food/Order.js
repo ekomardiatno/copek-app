@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
-import { View, Text, StatusBar, TouchableNativeFeedback, Image, Alert, BackHandler, ToastAndroid, ScrollView, Platform, TouchableHighlight, SafeAreaView } from 'react-native'
+import { View, Text, StatusBar, TouchableNativeFeedback, Image, Alert, BackHandler, ToastAndroid, ScrollView, Platform, TouchableHighlight, SafeAreaView, ActivityIndicator } from 'react-native'
 import Feather from 'react-native-vector-icons/Feather'
 import Fa from 'react-native-vector-icons/FontAwesome5'
-import Color from '../../components/Color'
+import Color, { colorYiq } from '../../components/Color'
 import { Input, Button, Card, SimpleHeader, DummyReviewFoodOrder, PopUp, DashLine } from '../../components/Components'
 import { getCurrentPosition, getDistanceMatrix } from '../../actions/locations.actions'
 import { getGeocoding, getAddressComponents } from '../../actions/geocode.actions'
@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-community/async-storage'
 import getImageThumb from '../../helpers/getImageThumb'
 import DistanceFormat from '../../helpers/DistanceFormat'
 import { AdMobBanner } from 'react-native-admob'
+import Toast from 'react-native-simple-toast'
 
 export default class Order extends Component {
 
@@ -35,7 +36,8 @@ export default class Order extends Component {
       formCatatan: '',
       note: '',
       scrollY: new Animated.Value(0),
-      isPossible: true
+      isPossible: true,
+      bookingLoading: false
     }
   }
 
@@ -115,7 +117,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan lokasi terkini',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -161,7 +163,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info lokasi',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -196,7 +198,11 @@ export default class Order extends Component {
             this.setState({
               isPossible: false
             }, () => {
-              ToastAndroid.show('Resto terlalu jauh', ToastAndroid.LONG)
+              if (Platform.OS === 'android') {
+                ToastAndroid.show('Resto terlalu jauh', ToastAndroid.LONG)
+              } else {
+                Toast.show('Resto terlalu jauh', Toast.LONG)
+              }
             })
           }
         })
@@ -207,7 +213,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal menghitung jarak',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -274,7 +280,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info resto',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -403,6 +409,48 @@ export default class Order extends Component {
   }
 
   _booking = () => {
+    this.setState({
+      bookingLoading: true
+    })
+    const wrappedPromise = cancellablePromise(this._promiseCheckOrderStatus())
+    this.appendPendingPromise(wrappedPromise)
+    wrappedPromise.promise
+      .then(res => {
+        if (res.length > 0) {
+          for (let i = 0; i < res.length; i++) {
+            AsyncStorage.getItem('orders', (err, order) => {
+              if (order !== null) {
+                order = JSON.parse(order)
+                let index = order.map(item => {
+                  return item.orderId
+                }).indexOf(res[i].orderId.toString())
+                if (res[i].status !== null) {
+                  order[index].status = res[i].status
+                } else {
+                  order.splice(index, 1)
+                }
+                AsyncStorage.setItem('orders', JSON.stringify(order), error => {
+                  if (i + 1 >= res.length) {
+                    this._checkOrderUnfinishedAndBooking()
+                  }
+                })
+              }
+            })
+          }
+        } else {
+          this._checkOrderUnfinishedAndBooking()
+        }
+      })
+      .then(() => this.removePendingPromise(wrappedPromise))
+      .catch(err => {
+        Alert.alert(
+          'Gagal membuat pesanan',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi'
+        )
+      })
+  }
+
+  _checkOrderUnfinishedAndBooking = () => {
     AsyncStorage.getItem('orders', function (err, orders) {
       let length = 0, array = []
       if (orders !== null) {
@@ -415,9 +463,12 @@ export default class Order extends Component {
         length = array.length
       }
       if (length > 0) {
-        ToastAndroid.show('Anda memiliki pesanan yang belum selesai', ToastAndroid.SHORT)
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Anda memiliki pesanan yang belum selesai', ToastAndroid.SHORT)
+        } else {
+          Toast.show('Anda memiliki pesanan yang belum selesai', Toast.SHORT)
+        }
       } else {
-        // ToastAndroid.show('Semua pesanan sudah selesai', ToastAndroid.SHORT)
         this.props.navigation.navigate('Booking', {
           orderType: 'FOOD',
           merchant: this.state.merchant,
@@ -428,7 +479,43 @@ export default class Order extends Component {
           note: this.state.note
         })
       }
+      this.setState({
+        bookingLoading: false
+      })
     }.bind(this))
+  }
+
+  _promiseCheckOrderStatus = () => {
+    return new Promise((resolve, reject) => {
+      AsyncStorage.getItem('orders', (error, result) => {
+        if (!error && result !== null) {
+          result = JSON.parse(result)
+          let filtered = result.filter(a => {
+            return a.status !== 'completed' && a.status !== 'cancelled_by_user' && a.status !== 'cancelled_by_driver'
+          })
+          if (filtered.length > 0) {
+            filtered = filtered.map(a => {
+              return a.orderId
+            })
+            fetch(`${HOST_REST_API}order/checking`, {
+              method: 'post',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(filtered)
+            })
+              .then(res => res.json())
+              .then(resolve)
+              .catch(reject)
+          } else {
+            resolve([])
+          }
+        } else {
+          resolve([])
+        }
+      })
+    })
   }
 
   render() {
@@ -793,15 +880,20 @@ export default class Order extends Component {
             :
             <DummyReviewFoodOrder />
         }
-        <View style={{ padding: 15, backgroundColor: Color.white, borderTopColor: Color.borderColor, borderTopWidth: 1 }}>
           <SafeAreaView>
+        <View style={{ padding: 15, backgroundColor: Color.white, borderTopColor: Color.borderColor, borderTopWidth: 1 }}>
             {
               this.state.distances != null && this.state.carts.length > 0 && this.state.isPossible
                 ?
-                <Button
-                  onPress={this._booking}
-                  title='Pesan sekarang'
-                />
+                this.state.bookingLoading ?
+                  <View style={{ alignItems: 'center', justifyContent: 'center', borderRadius: 3, paddingHorizontal: 15, height: 40, backgroundColor: Color.primary, elevation: 3 }}>
+                    <ActivityIndicator size={19} color={colorYiq(Color.primary)} />
+                  </View>
+                  :
+                  <Button
+                    onPress={this._booking}
+                    title='Pesan sekarang'
+                  />
                 :
                 <View
                   style={{
@@ -827,8 +919,8 @@ export default class Order extends Component {
                   </Text>
                 </View>
             }
-          </SafeAreaView>
         </View>
+          </SafeAreaView>
       </View>
     )
   }

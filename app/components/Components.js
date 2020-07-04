@@ -124,41 +124,6 @@ export class Button extends Component {
       textColor = colorYiq(Color.white)
       borderColor = Color.green
     }
-    const Component = () => {
-      return (
-        <View
-          style={{
-            elevation: elevation,
-            justifyContent: 'center',
-            paddingVertical: this.props.small ? 3.6 : 6,
-            paddingHorizontal: this.props.small ? 7.2 : 12,
-            borderRadius: 3,
-            minHeight: this.props.small ? 24 : 40,
-            borderWidth: borderWidth,
-            borderColor: borderColor,
-            backgroundColor: backgroundColor,
-            overflow: 'hidden',
-            ...shadow,
-            ...this.props.style
-          }}
-        >
-          {
-            this.props.component &&
-            this.props.component
-          }
-          {
-            this.props.title &&
-            <Text
-              style={{
-                color: textColor,
-                textAlign: 'center',
-                ...this.props.textStyle
-              }}
-            >{this.props.title}</Text>
-          }
-        </View>
-      )
-    }
     if (Platform.OS === 'android') {
       return (
         <TouchableNativeFeedback
@@ -166,19 +131,76 @@ export class Button extends Component {
           useForeground={true}
           background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
         >
-          <Component />
+          <View
+            style={{
+              elevation: elevation,
+              justifyContent: 'center',
+              paddingVertical: this.props.small ? 3.6 : 6,
+              paddingHorizontal: this.props.small ? 7.2 : 12,
+              borderRadius: 3,
+              minHeight: this.props.small ? 24 : 40,
+              borderWidth: borderWidth,
+              borderColor: borderColor,
+              backgroundColor: backgroundColor,
+              overflow: 'hidden',
+              ...this.props.style
+            }}
+          >
+            {
+              this.props.component &&
+              this.props.component
+            }
+            {
+              this.props.title &&
+              <Text
+                style={{
+                  color: textColor,
+                  textAlign: 'center',
+                  ...this.props.textStyle
+                }}
+              >{this.props.title}</Text>
+            }
+          </View>
         </TouchableNativeFeedback>
       )
     } else {
       return (
         <TouchableHighlight
           onPress={this.props.onPress}
-          underlayColor="rgba(0,0,0,.25)"
+          underlayColor='rgba(0,0,0,1)'
           style={{
-            borderRadius: 3
+            borderRadius: 3,
+            overflow: 'hidden',
+            ...shadow,
           }}
         >
-          <Component />
+          <View
+            style={{
+              backgroundColor: backgroundColor,
+              borderWidth: borderWidth,
+              borderColor: borderColor,
+              paddingVertical: this.props.small ? 3.6 : 6,
+              paddingHorizontal: this.props.small ? 7.2 : 12,
+              minHeight: this.props.small ? 24 : 40,
+              justifyContent: 'center',
+              ...this.props.style
+            }}
+          >
+            {
+              this.props.component &&
+              this.props.component
+            }
+            {
+              this.props.title &&
+              <Text
+                style={{
+                  color: textColor,
+                  textAlign: 'center',
+                  ...this.props.textStyle
+                }}
+              >{this.props.title}</Text>
+            }
+          </View>
         </TouchableHighlight>
       )
     }

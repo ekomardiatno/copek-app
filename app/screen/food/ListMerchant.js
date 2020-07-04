@@ -93,7 +93,7 @@ export default class ListMerchant extends Component {
       .catch(error => {
         Alert.alert(
           'Koneksi gagal',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',

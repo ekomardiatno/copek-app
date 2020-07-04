@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import { View, Text, BackHandler, ToastAndroid, Image, StatusBar, Alert, AppState, Animated, TouchableNativeFeedback, Linking, ActivityIndicator, Platform, TouchableHighlight } from 'react-native'
+import { View, Text, BackHandler, ToastAndroid, Image, StatusBar, Alert, AppState, Animated, TouchableNativeFeedback, Linking, ActivityIndicator, Platform, TouchableHighlight, SafeAreaView } from 'react-native'
 import MapView, { PROVIDER_GOOGLE, Marker, AnimatedRegion, Polyline as Direction } from 'react-native-maps'
 import { LATITUDE_DELTA, LONGITUDE_DELTA, NODE_APP_URL, HOST_REST_API } from '../components/Define'
 import Color, { colorYiq } from '../components/Color'
-import { Button, BookingStatus, Card } from '../components/Components'
+import { Button, BookingStatus, Card, SimpleHeader } from '../components/Components'
 import Spinner from 'react-native-spinkit'
 import Fa from 'react-native-vector-icons/FontAwesome5'
 import { getNearDrivers } from '../actions/drivers.actions'
@@ -15,6 +15,7 @@ const Sound = require('react-native-sound')
 import AsyncStorage from '@react-native-community/async-storage'
 import phoneNumFormat from '../helpers/phoneNumFormat'
 import getImageThumb from '../helpers/getImageThumb'
+import Toast from 'react-native-simple-toast'
 
 class Booking extends Component {
   timer
@@ -175,7 +176,13 @@ class Booking extends Component {
       clearTimeout(this.timeoutNextDriver)
       if (status === 'ACCEPT') {
         this.setState({
-          driver: this.state.driverTemporary
+          driver: this.state.driverTemporary,
+          driverCoord: new AnimatedRegion({
+            latitude: this.state.driverTemporary.location.coordinates[1],
+            longitude: this.state.driverTemporary.location.coordinates[0],
+            latitudeDelta: LATITUDE_DELTA,
+            longitudeDelta: LONGITUDE_DELTA,
+          })
         }, () => {
           this._postOrder()
         })
@@ -207,7 +214,6 @@ class Booking extends Component {
     }.bind(this))
     socket.on(`${receiverId}_receive_coordinate`, function (coordinate) {
       let duration = 300
-      let { driverCoord } = this.state
       if (Platform.OS === 'android') {
         if (this.driverMarker) {
           this.driverMarker._component.animateMarkerToCoordinate(
@@ -216,10 +222,11 @@ class Booking extends Component {
           )
         }
       } else {
-        driverCoord.timing({
-          ...coordinate,
-          duration
-        }).start()
+        this.state.driverCoord !== null &&
+          this.state.driverCoord.timing({
+            ...coordinate,
+            duration: duration
+          }).start()
       }
     }.bind(this))
     socket.on(`${receiverId}_receive_order_cancellation`, function () {
@@ -231,7 +238,11 @@ class Booking extends Component {
           }).indexOf(orderId.toString())
           order[index].status = 'cancelled_by_driver'
           AsyncStorage.setItem('orders', JSON.stringify(order), () => {
-            ToastAndroid.show('Driver membatalkan pesanan anda', ToastAndroid.SHORT)
+            if (Platform.OS === 'android') {
+              ToastAndroid.show('Driver membatalkan pesanan anda', ToastAndroid.SHORT)
+            } else {
+              Toast.show('Driver membatalkan pesanan anda', Toast.SHORT)
+            }
             this.props.navigation.goBack()
           })
         }
@@ -346,7 +357,7 @@ class Booking extends Component {
       .catch(err => {
         Alert.alert(
           'Gagal memperbarui status pesanan',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -431,7 +442,7 @@ class Booking extends Component {
       .catch(err => {
         Alert.alert(
           'Gagal mendapatkan obrolan',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -512,6 +523,12 @@ class Booking extends Component {
         status,
         customer,
         note,
+        driverCoord: new AnimatedRegion({
+          latitude: driver.location.coordinates[1],
+          longitude: driver.location.coordinates[0],
+          latitudeDelta: LATITUDE_DELTA,
+          longitudeDelta: LONGITUDE_DELTA,
+        }),
         orderDate: date,
         preventBack: false
       }, () => {
@@ -629,7 +646,7 @@ class Booking extends Component {
             .catch(error => {
               Alert.alert(
                 'Gagal membuat rute',
-                'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+                'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
                 [
                   {
                     text: 'Coba lagi',
@@ -702,7 +719,11 @@ class Booking extends Component {
           })
         } else {
           this.props.navigation.goBack()
-          ToastAndroid.show('Tidak dapat menemukan driver terdekat', ToastAndroid.SHORT)
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('Tidak dapat menemukan driver terdekat', ToastAndroid.SHORT)
+          } else {
+            Toast.show('Tidak dapat menemukan driver terdekat', Toast.SHORT)
+          }
         }
       })
       .then(() => {
@@ -711,7 +732,7 @@ class Booking extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan driver',
-          'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
           [
             {
               text: 'Coba lagi',
@@ -791,10 +812,18 @@ class Booking extends Component {
       } else {
         BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
         this.props.navigation.goBack()
-        ToastAndroid.show('Belum ada driver yang terhubung', ToastAndroid.SHORT)
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Belum ada driver yang terhubung', ToastAndroid.SHORT)
+        } else {
+          Toast.show('Belum ada driver yang terhubung', Toast.SHORT)
+        }
       }
     } else {
-      ToastAndroid.show('Tidak dapat terhubung', ToastAndroid.SHORT)
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Tidak dapat terhubung', ToastAndroid.SHORT)
+      } else {
+        Toast.show('Tidak dapat terhubung', Toast.SHORT)
+      }
       BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
       this.props.navigation.goBack()
     }
@@ -828,7 +857,11 @@ class Booking extends Component {
     this.timeOutPostOrder = setTimeout(function () {
       wrappedPromise.cancel()
       this.removePendingPromise(wrappedPromise)
-      ToastAndroid.show('Gagal membuat pesanan', ToastAndroid.SHORT)
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Gagal membuat pesanan', ToastAndroid.SHORT)
+      } else {
+        Toast.show('Gagal membuat pesanan', Toast.SHORT)
+      }
       BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
       this.props.navigation.goBack()
     }.bind(this), 10000)
@@ -869,18 +902,30 @@ class Booking extends Component {
               }
             })
             this._mapView.fitToElements(true)
-            ToastAndroid.show('Driver ditemukan', ToastAndroid.SHORT)
+            if (Platform.OS === 'android') {
+              ToastAndroid.show('Driver ditemukan', ToastAndroid.SHORT)
+            } else {
+              Toast.show('Driver ditemukan', Toast.SHORT)
+            }
           })
         } else {
           if (this.state.preventBack) {
-            ToastAndroid.show('Gagal membuat pesanan', ToastAndroid.SHORT)
+            if (Platform.OS === 'android') {
+              ToastAndroid.show('Gagal membuat pesanan', ToastAndroid.SHORT)
+            } else {
+              Toast.show('Gagal membuat pesanan', Toast.SHORT)
+            }
             BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
             this.props.navigation.goBack()
           }
         }
       })
       .catch(err => {
-        ToastAndroid.show('Periksa koneksi internet anda', ToastAndroid.SHORT)
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Periksa koneksi internet anda', ToastAndroid.SHORT)
+        } else {
+          Toast.show('Periksa koneksi internet anda', Toast.SHORT)
+        }
         BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
         this.props.navigation.goBack()
       })
@@ -943,7 +988,11 @@ class Booking extends Component {
                 })
               }
             }
-            ToastAndroid.show('Pesanan dibatalkan', ToastAndroid.SHORT)
+            if (Platform.OS === 'android') {
+              ToastAndroid.show('Pesanan dibatalkan', ToastAndroid.SHORT)
+            } else {
+              Toast.show('Pesanan dibatalkan', Toast.SHORT)
+            }
             BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
             this.props.navigation.goBack()
           } else {
@@ -955,7 +1004,7 @@ class Booking extends Component {
         .catch(err => {
           Alert.alert(
             'Gagal membatalkan pesanan',
-            'Cek koneksi wifi atau jaringan seluler anda dan coba lagi',
+            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
             [
               {
                 text: 'Coba lagi',
@@ -989,9 +1038,13 @@ class Booking extends Component {
   }
 
   render() {
-    const { merchant, origin, driver, destination, destinationMarker, polyline, fare, carts, orderDate, distances, status, region, orderType, orderId } = this.state
+    const { merchant, origin, driver, destination, destinationMarker, polyline, fare, carts, orderDate, distances, status, region, orderType, orderId, driverCoord } = this.state
     return (
       <View style={{ flex: 1 }}>
+        {
+          driver != null &&
+          <SimpleHeader goBack navigation={this.props.navigation} backBtnStyle={{ backgroundColor: 'white', elevation: 5 }} style={{ position: 'absolute', top: 0, backgroundColor: 'transparent', zIndex: 10 }} />
+        }
         <View style={{ flex: 1 }}>
           <MapView
             showsCompass={false}
@@ -1033,12 +1086,7 @@ class Booking extends Component {
               driver != null &&
               <Marker.Animated
                 ref={marker => this.driverMarker = marker}
-                coordinate={new AnimatedRegion({
-                  latitude: driver.location.coordinates[1],
-                  longitude: driver.location.coordinates[0],
-                  latitudeDelta: LATITUDE_DELTA,
-                  longitudeDelta: LONGITUDE_DELTA,
-                })}
+                coordinate={driverCoord}
               >
                 <View style={{ width: 60, height: 60 }}>
                   <Image style={{ width: '100%', height: '100%' }} source={require('../images/icons/driver-marker.png')} />
@@ -1066,222 +1114,219 @@ class Booking extends Component {
           </MapView>
         </View>
         <View style={{ backgroundColor: Color.white, position: 'absolute', bottom: 0, left: 0, right: 0 }}>
-          {
-            driver == null &&
-            <View style={{ padding: 15 }}>
-              <Text style={{ marginTop: 5, fontWeight: 'bold', fontSize: 18, marginBottom: 10, textAlign: 'center' }}>Mencari driver...</Text>
-              <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                <Spinner isVisible={true} size={100} type='Pulse' color={Color.green} />
+          <SafeAreaView>
+            {
+              driver == null &&
+              <View style={{ padding: 15 }}>
+                <Text style={{ marginTop: 5, fontWeight: 'bold', fontSize: 18, marginBottom: 10, textAlign: 'center' }}>Mencari driver...</Text>
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <Spinner isVisible={true} size={100} type='Pulse' color={Color.green} />
+                </View>
               </View>
-              {/* <Button onPress={() => {
-                ToastAndroid.show('Pesanan dibatalkan', ToastAndroid.SHORT)
-                BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
-                this.props.navigation.goBack()
-              }} tertiary title='Batalkan pesanan' style={{ elevation: 0 }} textStyle={{ fontWeight: 'bold', fontSize: 16, color: Color.red }} /> */}
-            </View>
-          }
-          {
-            driver != null &&
-            <View>
-              <BookingStatus
-                orderType={orderType}
-                status={status}
-                navigation={this._navigate}
-                navigateOrderDetail={
-                  () => this._navigate('OrderDetails', {
-                    orderType: orderType,
-                    origin: origin,
-                    merchant: merchant,
-                    destination: destination,
-                    fare: fare,
-                    carts: carts,
-                    date: orderDate,
-                    distances: distances,
-                    orderId: orderId
-                  })
-                }
-              />
-              <View style={{ padding: 15, flexDirection: 'row', marginHorizontal: -5, alignItems: 'center' }}>
-                <View style={{ marginHorizontal: 5 }}>
-                  <View style={{ height: 75, width: 75, borderRadius: 37.5, padding: 5, backgroundColor: Color.grayLight, overflow: 'hidden' }}>
-                    <View style={{ height: '100%', width: '100%', borderRadius: 37.5, overflow: 'hidden' }}>
-                      <Image style={{ height: '100%', width: '100%' }} source={{ uri: getImageThumb(driver.driverPicture, 'sm') }} />
+            }
+            {
+              driver != null &&
+              <View>
+                <BookingStatus
+                  orderType={orderType}
+                  status={status}
+                  navigation={this._navigate}
+                  navigateOrderDetail={
+                    () => this._navigate('OrderDetails', {
+                      orderType: orderType,
+                      origin: origin,
+                      merchant: merchant,
+                      destination: destination,
+                      fare: fare,
+                      carts: carts,
+                      date: orderDate,
+                      distances: distances,
+                      orderId: orderId
+                    })
+                  }
+                />
+                <View style={{ padding: 15, flexDirection: 'row', marginHorizontal: -5, alignItems: 'center' }}>
+                  <View style={{ marginHorizontal: 5 }}>
+                    <View style={{ height: 75, width: 75, borderRadius: 37.5, padding: 5, backgroundColor: Color.grayLight, overflow: 'hidden' }}>
+                      <View style={{ height: '100%', width: '100%', borderRadius: 37.5, overflow: 'hidden' }}>
+                        <Image style={{ height: '100%', width: '100%' }} source={{ uri: getImageThumb(driver.driverPicture, 'sm') }} />
+                      </View>
+                    </View>
+                  </View>
+                  <View style={{ marginHorizontal: 5, flex: 1 }}>
+                    <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13 }}>{driver.driverVRP}</Text>
+                    <Text numberOfLines={1} style={{ fontWeight: 'bold', fontSize: 18 }}>{driver.driverName}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={{ marginHorizontal: 5 }}>
+                      {
+                        Platform.OS === 'android' ?
+                          <TouchableNativeFeedback
+                            onPress={() => Linking.openURL(`tel://${driver.driverPhone}`)}
+                            useForeground={true}
+                            background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', true)}
+                          >
+                            <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
+                              <Fa name='phone' size={16} style={{ color: Color.white }} />
+                            </View>
+                          </TouchableNativeFeedback>
+                          :
+                          <TouchableHighlight
+                            style={{ borderRadius: 40 / 2 }}
+                            underlayColor='#fff'
+                            activeOpacity={0.85}
+                            onPress={() => Linking.openURL(`tel://${driver.driverPhone}`)}
+                          >
+                            <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
+                              <Fa name='phone' size={16} style={{ color: Color.white }} />
+                            </View>
+                          </TouchableHighlight>
+                      }
+                    </View>
+                    <View style={{ marginHorizontal: 5 }}>
+                      {
+                        Platform.OS === 'android' ?
+                          <TouchableNativeFeedback
+                            onPress={() => this._navigate('Chat', {
+                              chats: this.state.chats,
+                              noNewChat: () => {
+                                this.setState({
+                                  hasNewChats: false,
+                                  newChatLength: 0
+                                })
+                              },
+                              pushChat: (chats) => {
+                                this.setState({ chats })
+                              },
+                              socket: this.socket,
+                              receiverId: this.state.receiverId,
+                              driver: this.state.driver,
+                              orderId: this.state.orderId,
+                              status: this.state.status
+                            })}
+                            useForeground={true}
+                            background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', true)}
+                          >
+                            <View style={{ position: 'relative', width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
+                              {
+                                this.state.hasNewChats &&
+                                <View style={{ position: 'absolute', top: 0, right: 0, width: 10, height: 10, borderRadius: 10 / 2, backgroundColor: Color.red }} />
+                              }
+                              <Fa name='comment-dots' size={16} style={{ color: Color.white }} />
+                            </View>
+                          </TouchableNativeFeedback>
+                          :
+                          <TouchableHighlight
+                            underlayColor='#fff'
+                            activeOpacity={0.85}
+                            style={{ borderRadius: 40 / 2 }}
+                            onPress={() => this._navigate('Chat', {
+                              chats: this.state.chats,
+                              noNewChat: () => {
+                                this.setState({
+                                  hasNewChats: false,
+                                  newChatLength: 0
+                                })
+                              },
+                              pushChat: (chats) => {
+                                this.setState({ chats })
+                              },
+                              socket: this.socket,
+                              receiverId: this.state.receiverId,
+                              driver: this.state.driver,
+                              orderId: this.state.orderId,
+                              status: this.state.status
+                            })}
+                          >
+                            <View style={{ position: 'relative', width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
+                              {
+                                this.state.hasNewChats &&
+                                <View style={{ position: 'absolute', top: 0, right: 0, width: 10, height: 10, borderRadius: 10 / 2, backgroundColor: Color.red }} />
+                              }
+                              <Fa name='comment-dots' size={16} style={{ color: Color.white }} />
+                            </View>
+                          </TouchableHighlight>
+                      }
+                    </View>
+                    <View style={{ marginHorizontal: 5 }}>
+                      {
+                        Platform.OS === 'android' ?
+                          <TouchableNativeFeedback
+                            onPress={() => Linking.openURL(`whatsapp://send?phone=${phoneNumFormat(driver.driverPhone)}`)}
+                            useForeground={true}
+                            background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', true)}
+                          >
+                            <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
+                              <Fa name='whatsapp' size={16} style={{ color: Color.white }} />
+                            </View>
+                          </TouchableNativeFeedback>
+                          :
+                          <TouchableHighlight
+                            style={{ borderRadius: 40 / 2 }}
+                            activeOpacity={0.85}
+                            underlayColor='#fff'
+                            onPress={() => Linking.openURL(`whatsapp://send?phone=${phoneNumFormat(driver.driverPhone)}`)}
+                          >
+                            <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
+                              <Fa name='whatsapp' size={16} style={{ color: Color.white }} />
+                            </View>
+                          </TouchableHighlight>
+                      }
                     </View>
                   </View>
                 </View>
-                <View style={{ marginHorizontal: 5, flex: 1 }}>
-                  <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13 }}>{driver.driverVRP}</Text>
-                  <Text numberOfLines={1} style={{ fontWeight: 'bold', fontSize: 18 }}>{driver.driverName}</Text>
-                </View>
-                <View style={{ flexDirection: 'row' }}>
-                  <View style={{ marginHorizontal: 5 }}>
-                    {
-                      Platform.OS === 'android' ?
-                        <TouchableNativeFeedback
-                          onPress={() => Linking.openURL(`tel://${driver.driverPhone}`)}
-                          useForeground={true}
-                          background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', true)}
-                        >
-                          <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
-                            <Fa name='phone' size={16} style={{ color: Color.white }} />
-                          </View>
-                        </TouchableNativeFeedback>
-                        :
-                        <TouchableHighlight
-                          style={{ borderRadius: 40 / 2 }}
-                          underlayColor='#fff'
-                          activeOpacity={0.85}
-                          onPress={() => Linking.openURL(`tel://${driver.driverPhone}`)}
-                        >
-                          <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
-                            <Fa name='phone' size={16} style={{ color: Color.white }} />
-                          </View>
-                        </TouchableHighlight>
-                    }
-                  </View>
-                  <View style={{ marginHorizontal: 5 }}>
-                    {
-                      Platform.OS === 'android' ?
-                        <TouchableNativeFeedback
-                          onPress={() => this._navigate('Chat', {
-                            chats: this.state.chats,
-                            noNewChat: () => {
-                              this.setState({
-                                hasNewChats: false,
-                                newChatLength: 0
-                              })
-                            },
-                            pushChat: (chats) => {
-                              this.setState({ chats })
-                            },
-                            socket: this.socket,
-                            receiverId: this.state.receiverId,
-                            driver: this.state.driver,
-                            orderId: this.state.orderId,
-                            status: this.state.status
-                          })}
-                          useForeground={true}
-                          background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', true)}
-                        >
-                          <View style={{ position: 'relative', width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
-                            {
-                              this.state.hasNewChats &&
-                              <View style={{ position: 'absolute', top: 0, right: 0, width: 10, height: 10, borderRadius: 10 / 2, backgroundColor: Color.red }} />
-                            }
-                            <Fa name='comment-dots' size={16} style={{ color: Color.white }} />
-                          </View>
-                        </TouchableNativeFeedback>
-                        :
-                        <TouchableHighlight
-                          underlayColor='#fff'
-                          activeOpacity={0.85}
-                          style={{ borderRadius: 40 / 2 }}
-                          onPress={() => this._navigate('Chat', {
-                            chats: this.state.chats,
-                            noNewChat: () => {
-                              this.setState({
-                                hasNewChats: false,
-                                newChatLength: 0
-                              })
-                            },
-                            pushChat: (chats) => {
-                              this.setState({ chats })
-                            },
-                            socket: this.socket,
-                            receiverId: this.state.receiverId,
-                            driver: this.state.driver,
-                            orderId: this.state.orderId,
-                            status: this.state.status
-                          })}
-                        >
-                          <View style={{ position: 'relative', width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
-                            {
-                              this.state.hasNewChats &&
-                              <View style={{ position: 'absolute', top: 0, right: 0, width: 10, height: 10, borderRadius: 10 / 2, backgroundColor: Color.red }} />
-                            }
-                            <Fa name='comment-dots' size={16} style={{ color: Color.white }} />
-                          </View>
-                        </TouchableHighlight>
-                    }
-                  </View>
-                  <View style={{ marginHorizontal: 5 }}>
-                    {
-                      Platform.OS === 'android' ?
-                        <TouchableNativeFeedback
-                          onPress={() => Linking.openURL(`whatsapp://send?phone=${phoneNumFormat(driver.driverPhone)}`)}
-                          useForeground={true}
-                          background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', true)}
-                        >
-                          <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
-                            <Fa name='whatsapp' size={16} style={{ color: Color.white }} />
-                          </View>
-                        </TouchableNativeFeedback>
-                        :
-                        <TouchableHighlight
-                          style={{ borderRadius: 40 / 2 }}
-                          activeOpacity={0.85}
-                          underlayColor='#fff'
-                          onPress={() => Linking.openURL(`whatsapp://send?phone=${phoneNumFormat(driver.driverPhone)}`)}
-                        >
-                          <View style={{ width: 40, height: 40, backgroundColor: Color.green, borderRadius: 40 / 2, alignItems: 'center', justifyContent: 'center' }}>
-                            <Fa name='whatsapp' size={16} style={{ color: Color.white }} />
-                          </View>
-                        </TouchableHighlight>
-                    }
-                  </View>
-                </View>
+                <Card
+                  body={
+                    <View style={{ padding: 15, borderTopColor: Color.borderColor, borderTopWidth: 1 }}>
+                      {
+                        status != 'finded' && status != 'towards_resto'
+                          ?
+                          status === 'completed' ?
+                            <View style={{ borderRadius: 3, backgroundColor: Color.grayLighter, alignItems: 'center', justifyContent: 'center', height: 40 }}>
+                              <Text>Selesai</Text>
+                            </View>
+                            :
+                            (
+                              status !== 'cancelled_by_user' && status !== 'canceled_by_driver' ?
+                                <View style={{ borderRadius: 3, backgroundColor: Color.grayLighter, alignItems: 'center', justifyContent: 'center', height: 40 }}>
+                                  <Text>Pesanan diproses</Text>
+                                </View>
+                                :
+                                <View style={{ borderRadius: 3, backgroundColor: Color.grayLighter, alignItems: 'center', justifyContent: 'center', height: 40 }}>
+                                  <Text>Pesanan dibatalkan</Text>
+                                </View>
+                            )
+                          :
+                          this.state.cancelling ?
+                            <View style={{ borderRadius: 3, backgroundColor: Color.red, alignItems: 'center', justifyContent: 'center', height: 40, elevation: 3 }}>
+                              <ActivityIndicator size='small' color={colorYiq(Color.red)} />
+                            </View>
+                            :
+                            <Button red onPress={this._cancelOrder} title='Batalkan pesanan' />
+                      }
+                    </View>
+                  }
+                />
               </View>
-              <Card
-                body={
-                  <View style={{ padding: 15, borderTopColor: Color.borderColor, borderTopWidth: 1 }}>
-                    {
-                      status != 'finded' && status != 'towards_resto'
-                        ?
-                        status === 'completed' ?
-                          <View style={{ borderRadius: 3, backgroundColor: Color.grayLighter, alignItems: 'center', justifyContent: 'center', height: 40 }}>
-                            <Text>Selesai</Text>
-                          </View>
-                          :
-                          (
-                            status !== 'cancelled_by_user' && status !== 'canceled_by_driver' ?
-                              <View style={{ borderRadius: 3, backgroundColor: Color.grayLighter, alignItems: 'center', justifyContent: 'center', height: 40 }}>
-                                <Text>Pesanan diproses</Text>
-                              </View>
-                              :
-                              <View style={{ borderRadius: 3, backgroundColor: Color.grayLighter, alignItems: 'center', justifyContent: 'center', height: 40 }}>
-                                <Text>Pesanan dibatalkan</Text>
-                              </View>
-                          )
-                        :
-                        this.state.cancelling ?
-                          <View style={{ borderRadius: 3, backgroundColor: Color.red, alignItems: 'center', justifyContent: 'center', height: 40, elevation: 3 }}>
-                            <ActivityIndicator size='small' color={colorYiq(Color.red)} />
-                          </View>
-                          :
-                          <Button red onPress={this._cancelOrder} title='Batalkan pesanan' />
-                    }
+            }
+            {
+              driver !== null && this.socket && !this.state.isConnected &&
+              (
+                this.state.readyConnect ?
+                  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.35)', zIndex: 2 }}>
+                    <Fa name="exclamation-circle" size={40} style={{ color: Color.red, marginBottom: 15 }} />
+                    <Text style={{ textAlign: 'center', color: Color.white, fontWeight: 'bold' }}>Tidak bisa terhubung</Text>
                   </View>
-                }
-              />
-            </View>
-          }
-          {
-            driver !== null && this.socket && !this.state.isConnected &&
-            (
-              this.state.readyConnect ?
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.35)', zIndex: 2 }}>
-                  <Fa name="exclamation-circle" size={40} style={{ color: Color.red, marginBottom: 15 }} />
-                  <Text style={{ textAlign: 'center', color: Color.white, fontWeight: 'bold' }}>Tidak bisa terhubung</Text>
-                </View>
-                :
-                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.35)', zIndex: 2 }}>
-                  <View style={{ marginBottom: 15, height: 40, alignItems: 'center', justifyContent: 'center' }}>
-                    <ActivityIndicator size='large' color={Color.primary} />
+                  :
+                  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,.35)', zIndex: 2 }}>
+                    <View style={{ marginBottom: 15, height: 40, alignItems: 'center', justifyContent: 'center' }}>
+                      <ActivityIndicator size='large' color={Color.primary} />
+                    </View>
+                    <Text style={{ textAlign: 'center', color: Color.white, fontWeight: 'bold' }}>Menghubungkan</Text>
                   </View>
-                  <Text style={{ textAlign: 'center', color: Color.white, fontWeight: 'bold' }}>Menghubungkan</Text>
-                </View>
-            )
-          }
+              )
+            }
+          </SafeAreaView>
         </View>
         {
           this.state.newChatLength > 0 &&
