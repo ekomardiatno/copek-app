@@ -883,27 +883,6 @@ export class FoodMerchant extends Component {
               )
 
               if (filtercart.length > 0) {
-                let BtnNote = () => {
-                  return (
-                    <View style={{
-                      marginHorizontal: 5, height: 24, borderRadius: 3, overflow: 'hidden', elevation: 1, width: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.white,
-                      shadowColor: "#000",
-                      shadowOffset: {
-                        width: 0,
-                        height: 1,
-                      },
-                      shadowOpacity: 0.18,
-                      shadowRadius: 1.00,
-                    }}>
-                      {
-                        filtercart[0].note != '' ?
-                          <Feather style={{ color: Color.green, fontSize: 11 }} name='check-circle' />
-                          :
-                          <Feather style={{ color: Color.secondary, fontSize: 11 }} name='edit-3' />
-                      }
-                    </View>
-                  )
-                }
                 view = (
                   <View style={{ marginHorizontal: -5, flexDirection: 'row' }}>
                     {
@@ -915,7 +894,23 @@ export class FoodMerchant extends Component {
                           useForeground={true}
                           background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
                         >
-                          <BtnNote />
+                          <View style={{
+                            marginHorizontal: 5, height: 24, borderRadius: 3, overflow: 'hidden', elevation: 1, width: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.white,
+                            shadowColor: "#000",
+                            shadowOffset: {
+                              width: 0,
+                              height: 1,
+                            },
+                            shadowOpacity: 0.18,
+                            shadowRadius: 1.00,
+                          }}>
+                            {
+                              filtercart[0].note != '' ?
+                                <Feather style={{ color: Color.green, fontSize: 11 }} name='check-circle' />
+                                :
+                                <Feather style={{ color: Color.secondary, fontSize: 11 }} name='edit-3' />
+                            }
+                          </View>
                         </TouchableNativeFeedback>
                         :
                         <TouchableHighlight
@@ -925,7 +920,23 @@ export class FoodMerchant extends Component {
                           underlayColor='#fff'
                           activeOpacity={0.85}
                         >
-                          <BtnNote />
+                          <View style={{
+                            marginHorizontal: 5, height: 24, borderRadius: 3, overflow: 'hidden', elevation: 1, width: 24, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.white,
+                            shadowColor: "#000",
+                            shadowOffset: {
+                              width: 0,
+                              height: 1,
+                            },
+                            shadowOpacity: 0.18,
+                            shadowRadius: 1.00,
+                          }}>
+                            {
+                              filtercart[0].note != '' ?
+                                <Feather style={{ color: Color.green, fontSize: 11 }} name='check-circle' />
+                                :
+                                <Feather style={{ color: Color.secondary, fontSize: 11 }} name='edit-3' />
+                            }
+                          </View>
                         </TouchableHighlight>
                     }
                     <View style={{
