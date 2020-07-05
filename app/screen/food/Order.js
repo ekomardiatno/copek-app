@@ -738,7 +738,7 @@ export default class Order extends Component {
                                           </View>
                                         </TouchableHighlight>
                                     }
-                                    <View style={{ marginHorizontal: 5, height: 30, flexDirection: 'row', borderRadius: 3, overflow: 'hidden', elevation: 1 }}>
+                                    <View style={{ marginHorizontal: 5, height: 30, flexDirection: 'row', borderRadius: 3, overflow: 'hidden', backgroundColor: Color.white, elevation: 1 }}>
                                       {
                                         Platform.OS === 'android' ?
                                           <TouchableNativeFeedback

@@ -501,32 +501,6 @@ export class Items extends Component {
 
 export class ItemVertical extends Component {
   render() {
-    const Component = () => {
-      return (
-        <View style={{ borderRadius: 10, overflow: 'hidden', width: 140, height: 205, marginBottom: 2, backgroundColor: Color.white }}>
-          <View style={{ width: '100%', height: 120, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter }}>
-            <Image style={{ width: '100%', height: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10 }} resizeMode='cover' source={{ uri: getImageThumb(this.props.category === 'food' ? this.props.item.foodPicture : this.props.item.merchantPicture, 'sm') }} />
-          </View>
-          <View style={{ padding: 8, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderWidth: 1, borderColor: Color.borderColor, borderTopWidth: 0, flex: 1 }}>
-            <Text numberOfLines={2} style={{ fontWeight: 'bold', marginBottom: 6, color: Color.grayDark }}>{this.props.category === 'food' ? this.props.item.foodName : this.props.item.merchantName}</Text>
-            {
-              this.props.category === 'food' ?
-                <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
-                  <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(this.props.item.foodPrice - (this.props.item.foodDiscount / 100 * this.props.item.foodPrice))}</Text>
-                  {
-                    this.props.item.foodDiscount > 0 &&
-                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, textDecorationLine: 'line-through', textDecorationStyle: 'solid', color: Color.gray }}>{Currency(this.props.item.foodPrice)}</Text>
-                  }
-                </View>
-                :
-                <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
-                  <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{DistanceFormat(parseInt(this.props.item.merchantDistance))}</Text>
-                </View>
-            }
-          </View>
-        </View>
-      )
-    }
     if (Platform.OS === 'android') {
       return (
         <TouchableNativeFeedback
@@ -537,7 +511,28 @@ export class ItemVertical extends Component {
             merchantId: this.props.item.merchantId,
           })}
         >
-          <Component />
+          <View style={{ borderRadius: 10, overflow: 'hidden', width: 140, height: 205, marginBottom: 2, backgroundColor: Color.white }}>
+            <View style={{ width: '100%', height: 120, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter }}>
+              <Image style={{ width: '100%', height: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10 }} resizeMode='cover' source={{ uri: getImageThumb(this.props.category === 'food' ? this.props.item.foodPicture : this.props.item.merchantPicture, 'sm') }} />
+            </View>
+            <View style={{ padding: 8, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderWidth: 1, borderColor: Color.borderColor, borderTopWidth: 0, flex: 1 }}>
+              <Text numberOfLines={2} style={{ fontWeight: 'bold', marginBottom: 6, color: Color.grayDark }}>{this.props.category === 'food' ? this.props.item.foodName : this.props.item.merchantName}</Text>
+              {
+                this.props.category === 'food' ?
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(this.props.item.foodPrice - (this.props.item.foodDiscount / 100 * this.props.item.foodPrice))}</Text>
+                    {
+                      this.props.item.foodDiscount > 0 &&
+                      <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, textDecorationLine: 'line-through', textDecorationStyle: 'solid', color: Color.gray }}>{Currency(this.props.item.foodPrice)}</Text>
+                    }
+                  </View>
+                  :
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{DistanceFormat(parseInt(this.props.item.merchantDistance))}</Text>
+                  </View>
+              }
+            </View>
+          </View>
         </TouchableNativeFeedback>
       )
     } else {
@@ -551,7 +546,28 @@ export class ItemVertical extends Component {
           })}
           style={{ borderRadius: 10 }}
         >
-          <Component />
+          <View style={{ borderRadius: 10, overflow: 'hidden', width: 140, height: 205, marginBottom: 2, backgroundColor: Color.white }}>
+            <View style={{ width: '100%', height: 120, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter }}>
+              <Image style={{ width: '100%', height: '100%', borderTopLeftRadius: 10, borderTopRightRadius: 10 }} resizeMode='cover' source={{ uri: getImageThumb(this.props.category === 'food' ? this.props.item.foodPicture : this.props.item.merchantPicture, 'sm') }} />
+            </View>
+            <View style={{ padding: 8, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderWidth: 1, borderColor: Color.borderColor, borderTopWidth: 0, flex: 1 }}>
+              <Text numberOfLines={2} style={{ fontWeight: 'bold', marginBottom: 6, color: Color.grayDark }}>{this.props.category === 'food' ? this.props.item.foodName : this.props.item.merchantName}</Text>
+              {
+                this.props.category === 'food' ?
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(this.props.item.foodPrice - (this.props.item.foodDiscount / 100 * this.props.item.foodPrice))}</Text>
+                    {
+                      this.props.item.foodDiscount > 0 &&
+                      <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, textDecorationLine: 'line-through', textDecorationStyle: 'solid', color: Color.gray }}>{Currency(this.props.item.foodPrice)}</Text>
+                    }
+                  </View>
+                  :
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{DistanceFormat(parseInt(this.props.item.merchantDistance))}</Text>
+                  </View>
+              }
+            </View>
+          </View>
         </TouchableHighlight>
       )
     }
@@ -560,44 +576,6 @@ export class ItemVertical extends Component {
 
 export class ItemHorizontal extends Component {
   render() {
-    const Component = () => {
-      return (
-        <View style={{ paddingHorizontal: 15, paddingVertical: 10, flexDirection: 'row', position: 'relative' }}>
-          <View style={{ width: 80, height: 80, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter }}>
-            <Image style={{ width: '100%', height: '100%', borderRadius: 5 }} resizeMode='cover' source={{ uri: getImageThumb(this.props.category === 'food' ? this.props.item.foodPicture : this.props.item.merchantPicture, 'xs') }} />
-          </View>
-          {
-            this.props.category === 'food' && this.props.item.foodDiscount > 0 &&
-            <View style={{ position: 'absolute', top: 15, left: 10.5, width: 55, height: 24 }}>
-              <Image resizeMode='contain' style={{ width: '100%', height: '100%' }} source={require('../images/ribbon.png')} />
-            </View>
-          }
-          <View style={{ paddingLeft: 10, flex: 1 }}>
-            <Text style={{ fontWeight: 'bold', color: Color.grayDark, fontSize: 15, marginBottom: 2 }}>{this.props.category === 'food' ? this.props.item.foodName : this.props.item.merchantName}</Text>
-            {
-              this.props.category === 'food' ?
-                <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13, color: Color.grayDark }}>{this.props.item.merchantName}</Text>
-                :
-                <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13, color: Color.grayDark }}>{this.props.item.merchantAddress}</Text>
-            }
-            {
-              this.props.category === 'food' ?
-                <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
-                  <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(this.props.item.foodPrice - (this.props.item.foodDiscount / 100 * this.props.item.foodPrice))}</Text>
-                  {
-                    this.props.item.foodDiscount > 0 &&
-                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, textDecorationLine: 'line-through', textDecorationStyle: 'solid', color: Color.gray }}>{Currency(this.props.item.foodPrice)}</Text>
-                  }
-                </View>
-                :
-                <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
-                  <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{DistanceFormat(parseInt(this.props.item.merchantDistance))}</Text>
-                </View>
-            }
-          </View>
-        </View>
-      )
-    }
     const Pressed = () => {
       this.props.navigate('Merchant', {
         foodId: this.props.category === 'food' ? this.props.item.foodId : undefined,
@@ -611,7 +589,40 @@ export class ItemHorizontal extends Component {
           background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
           onPress={Pressed}
         >
-          <Component />
+          <View style={{ paddingHorizontal: 15, paddingVertical: 10, flexDirection: 'row', position: 'relative' }}>
+            <View style={{ width: 80, height: 80, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter }}>
+              <Image style={{ width: '100%', height: '100%', borderRadius: 5 }} resizeMode='cover' source={{ uri: getImageThumb(this.props.category === 'food' ? this.props.item.foodPicture : this.props.item.merchantPicture, 'xs') }} />
+            </View>
+            {
+              this.props.category === 'food' && this.props.item.foodDiscount > 0 &&
+              <View style={{ position: 'absolute', top: 15, left: 10.5, width: 55, height: 24 }}>
+                <Image resizeMode='contain' style={{ width: '100%', height: '100%' }} source={require('../images/ribbon.png')} />
+              </View>
+            }
+            <View style={{ paddingLeft: 10, flex: 1 }}>
+              <Text style={{ fontWeight: 'bold', color: Color.grayDark, fontSize: 15, marginBottom: 2 }}>{this.props.category === 'food' ? this.props.item.foodName : this.props.item.merchantName}</Text>
+              {
+                this.props.category === 'food' ?
+                  <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13, color: Color.grayDark }}>{this.props.item.merchantName}</Text>
+                  :
+                  <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13, color: Color.grayDark }}>{this.props.item.merchantAddress}</Text>
+              }
+              {
+                this.props.category === 'food' ?
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(this.props.item.foodPrice - (this.props.item.foodDiscount / 100 * this.props.item.foodPrice))}</Text>
+                    {
+                      this.props.item.foodDiscount > 0 &&
+                      <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, textDecorationLine: 'line-through', textDecorationStyle: 'solid', color: Color.gray }}>{Currency(this.props.item.foodPrice)}</Text>
+                    }
+                  </View>
+                  :
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{DistanceFormat(parseInt(this.props.item.merchantDistance))}</Text>
+                  </View>
+              }
+            </View>
+          </View>
         </TouchableNativeFeedback>
       )
     } else {
@@ -621,7 +632,40 @@ export class ItemHorizontal extends Component {
           underlayColor="#fff"
           onPress={Pressed}
         >
-          <Component />
+          <View style={{ paddingHorizontal: 15, paddingVertical: 10, flexDirection: 'row', position: 'relative' }}>
+            <View style={{ width: 80, height: 80, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter }}>
+              <Image style={{ width: '100%', height: '100%', borderRadius: 5 }} resizeMode='cover' source={{ uri: getImageThumb(this.props.category === 'food' ? this.props.item.foodPicture : this.props.item.merchantPicture, 'xs') }} />
+            </View>
+            {
+              this.props.category === 'food' && this.props.item.foodDiscount > 0 &&
+              <View style={{ position: 'absolute', top: 15, left: 10.5, width: 55, height: 24 }}>
+                <Image resizeMode='contain' style={{ width: '100%', height: '100%' }} source={require('../images/ribbon.png')} />
+              </View>
+            }
+            <View style={{ paddingLeft: 10, flex: 1 }}>
+              <Text style={{ fontWeight: 'bold', color: Color.grayDark, fontSize: 15, marginBottom: 2 }}>{this.props.category === 'food' ? this.props.item.foodName : this.props.item.merchantName}</Text>
+              {
+                this.props.category === 'food' ?
+                  <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13, color: Color.grayDark }}>{this.props.item.merchantName}</Text>
+                  :
+                  <Text numberOfLines={1} style={{ marginBottom: 8, fontSize: 13, color: Color.grayDark }}>{this.props.item.merchantAddress}</Text>
+              }
+              {
+                this.props.category === 'food' ?
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(this.props.item.foodPrice - (this.props.item.foodDiscount / 100 * this.props.item.foodPrice))}</Text>
+                    {
+                      this.props.item.foodDiscount > 0 &&
+                      <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, textDecorationLine: 'line-through', textDecorationStyle: 'solid', color: Color.gray }}>{Currency(this.props.item.foodPrice)}</Text>
+                    }
+                  </View>
+                  :
+                  <View style={{ flexDirection: 'row', marginHorizontal: -5 }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{DistanceFormat(parseInt(this.props.item.merchantDistance))}</Text>
+                  </View>
+              }
+            </View>
+          </View>
         </TouchableHighlight>
       )
     }
@@ -952,37 +996,6 @@ export class FoodMerchant extends Component {
                   </View>
                 )
               }
-
-              const Component = () => {
-                return (
-                  <View>
-                    <View style={{ flexDirection: 'row', position: 'relative', margin: 15 }}>
-                      <View style={{ width: 70, height: 70, overflow: 'hidden', borderRadius: 3, backgroundColor: Color.grayLighter }}>
-                        <Image style={{ width: '100%', height: '100%' }} source={{ uri: getImageThumb(item.foodPicture, 'xs') }} />
-                      </View>
-                      {
-                        item.foodDiscount > 0 &&
-                        <View style={{ position: 'absolute', top: 5, left: -4.5, width: 55, height: 24 }}>
-                          <Image style={{ width: '100%', height: '100%' }} resizeMode='contain' source={require('../images/ribbon.png')} />
-                        </View>
-                      }
-                      <View style={{ flex: 1, paddingHorizontal: 10 }}>
-                        <Text style={{ fontWeight: 'bold', marginBottom: 6 }} numberOfLines={2}>{item.foodName}</Text>
-                        <View style={{ flexDirection: 'row', marginHorizontal: -5, marginBottom: 6 }}>
-                          <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(item.foodPrice - (item.foodDiscount / 100 * item.foodPrice))}</Text>
-                          {
-                            item.foodDiscount > 0 &&
-                            <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, color: Color.textMuted, textDecorationLine: 'line-through', textDecorationStyle: 'solid' }}>{Currency(item.foodPrice)}</Text>
-                          }
-                        </View>
-                        <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                          {view}
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                )
-              }
               if (Platform.OS === 'android') {
                 return (
                   <TouchableNativeFeedback
@@ -1001,7 +1014,32 @@ export class FoodMerchant extends Component {
                     useForeground={true}
                     background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
                   >
-                    <Component />
+                    <View>
+                      <View style={{ flexDirection: 'row', position: 'relative', margin: 15 }}>
+                        <View style={{ width: 70, height: 70, overflow: 'hidden', borderRadius: 3, backgroundColor: Color.grayLighter }}>
+                          <Image style={{ width: '100%', height: '100%' }} source={{ uri: getImageThumb(item.foodPicture, 'xs') }} />
+                        </View>
+                        {
+                          item.foodDiscount > 0 &&
+                          <View style={{ position: 'absolute', top: 5, left: -4.5, width: 55, height: 24 }}>
+                            <Image style={{ width: '100%', height: '100%' }} resizeMode='contain' source={require('../images/ribbon.png')} />
+                          </View>
+                        }
+                        <View style={{ flex: 1, paddingHorizontal: 10 }}>
+                          <Text style={{ fontWeight: 'bold', marginBottom: 6 }} numberOfLines={2}>{item.foodName}</Text>
+                          <View style={{ flexDirection: 'row', marginHorizontal: -5, marginBottom: 6 }}>
+                            <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(item.foodPrice - (item.foodDiscount / 100 * item.foodPrice))}</Text>
+                            {
+                              item.foodDiscount > 0 &&
+                              <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, color: Color.textMuted, textDecorationLine: 'line-through', textDecorationStyle: 'solid' }}>{Currency(item.foodPrice)}</Text>
+                            }
+                          </View>
+                          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                            {view}
+                          </View>
+                        </View>
+                      </View>
+                    </View>
                   </TouchableNativeFeedback>
                 )
               } else {
@@ -1022,7 +1060,32 @@ export class FoodMerchant extends Component {
                     activeOpacity={0.85}
                     underlayColor='#fff'
                   >
-                    <Component />
+                    <View>
+                      <View style={{ flexDirection: 'row', position: 'relative', margin: 15 }}>
+                        <View style={{ width: 70, height: 70, overflow: 'hidden', borderRadius: 3, backgroundColor: Color.grayLighter }}>
+                          <Image style={{ width: '100%', height: '100%' }} source={{ uri: getImageThumb(item.foodPicture, 'xs') }} />
+                        </View>
+                        {
+                          item.foodDiscount > 0 &&
+                          <View style={{ position: 'absolute', top: 5, left: -4.5, width: 55, height: 24 }}>
+                            <Image style={{ width: '100%', height: '100%' }} resizeMode='contain' source={require('../images/ribbon.png')} />
+                          </View>
+                        }
+                        <View style={{ flex: 1, paddingHorizontal: 10 }}>
+                          <Text style={{ fontWeight: 'bold', marginBottom: 6 }} numberOfLines={2}>{item.foodName}</Text>
+                          <View style={{ flexDirection: 'row', marginHorizontal: -5, marginBottom: 6 }}>
+                            <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5 }}>{Currency(item.foodPrice - (item.foodDiscount / 100 * item.foodPrice))}</Text>
+                            {
+                              item.foodDiscount > 0 &&
+                              <Text style={{ fontSize: 13, fontWeight: 'bold', marginHorizontal: 5, color: Color.textMuted, textDecorationLine: 'line-through', textDecorationStyle: 'solid' }}>{Currency(item.foodPrice)}</Text>
+                            }
+                          </View>
+                          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                            {view}
+                          </View>
+                        </View>
+                      </View>
+                    </View>
                   </TouchableHighlight>
                 )
               }
@@ -1190,31 +1253,6 @@ export class BookingStatus extends Component {
           break
       }
     }
-    const Component = () => {
-      return (
-        <View style={{ paddingHorizontal: 15 }}>
-          <View style={{ borderBottomWidth: 1, paddingVertical: 15, borderBottomColor: Color.borderColor, marginHorizontal: -5, flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ height: 65, width: 65, padding: 10, marginHorizontal: 5 }}>
-              {
-                orderType === 'FOOD' &&
-                <Image style={{ height: '100%', width: '100%' }} source={require('../images/icons/dish.png')} />
-              }
-              {
-                orderType === 'RIDE' &&
-                <Image style={{ height: '100%', width: '100%' }} source={require('../images/icons/scooter.png')} />
-              }
-            </View>
-            <View style={{ marginHorizontal: 5, flex: 1 }}>
-              <Text numberOfLines={1} style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 5 }}>{title}</Text>
-              <Text numberOfLines={1} style={{ fontSize: 13 }}>{subtitle}</Text>
-            </View>
-            <View style={{ marginHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
-              <Fa color={Color.gray} name='chevron-right' />
-            </View>
-          </View>
-        </View>
-      )
-    }
     return (
       <View style={this.props.style}>
         {
@@ -1225,7 +1263,27 @@ export class BookingStatus extends Component {
                 useForeground={true}
                 background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
               >
-                <Component />
+                <View style={{ paddingHorizontal: 15 }}>
+                  <View style={{ borderBottomWidth: 1, paddingVertical: 15, borderBottomColor: Color.borderColor, marginHorizontal: -5, flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ height: 65, width: 65, padding: 10, marginHorizontal: 5 }}>
+                      {
+                        orderType === 'FOOD' &&
+                        <Image style={{ height: '100%', width: '100%' }} source={require('../images/icons/dish.png')} />
+                      }
+                      {
+                        orderType === 'RIDE' &&
+                        <Image style={{ height: '100%', width: '100%' }} source={require('../images/icons/scooter.png')} />
+                      }
+                    </View>
+                    <View style={{ marginHorizontal: 5, flex: 1 }}>
+                      <Text numberOfLines={1} style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 5 }}>{title}</Text>
+                      <Text numberOfLines={1} style={{ fontSize: 13 }}>{subtitle}</Text>
+                    </View>
+                    <View style={{ marginHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                      <Fa color={Color.gray} name='chevron-right' />
+                    </View>
+                  </View>
+                </View>
               </TouchableNativeFeedback>
               :
               <TouchableHighlight
@@ -1233,7 +1291,27 @@ export class BookingStatus extends Component {
                 activeOpacity={0.85}
                 underlayColor='#fff'
               >
-                <Component />
+                <View style={{ paddingHorizontal: 15 }}>
+                  <View style={{ borderBottomWidth: 1, paddingVertical: 15, borderBottomColor: Color.borderColor, marginHorizontal: -5, flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={{ height: 65, width: 65, padding: 10, marginHorizontal: 5 }}>
+                      {
+                        orderType === 'FOOD' &&
+                        <Image style={{ height: '100%', width: '100%' }} source={require('../images/icons/dish.png')} />
+                      }
+                      {
+                        orderType === 'RIDE' &&
+                        <Image style={{ height: '100%', width: '100%' }} source={require('../images/icons/scooter.png')} />
+                      }
+                    </View>
+                    <View style={{ marginHorizontal: 5, flex: 1 }}>
+                      <Text numberOfLines={1} style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 5 }}>{title}</Text>
+                      <Text numberOfLines={1} style={{ fontSize: 13 }}>{subtitle}</Text>
+                    </View>
+                    <View style={{ marginHorizontal: 5, alignItems: 'center', justifyContent: 'center' }}>
+                      <Fa color={Color.gray} name='chevron-right' />
+                    </View>
+                  </View>
+                </View>
               </TouchableHighlight>
             :
             <View style={{ paddingHorizontal: 15 }}>
@@ -1337,48 +1415,7 @@ export class OrderHistoryItem extends Component {
         iconColor = Color.red
         break
     }
-    const Component = () => {
-      return (
-        <View style={{ paddingHorizontal: 15 }}>
-          <View style={{ paddingVertical: 15, borderBottomWidth: this.props.last ? 0 : 1, borderBottomColor: Color.grayLight }}>
-            <View style={{ flexDirection: 'row' }}>
-              <View>
-                <View style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: iconColor }}>
-                  <Fa color={colorYiq(iconColor)} size={20} name={iconName} />
-                </View>
-              </View>
-              <View style={{ flex: 1, paddingLeft: 15, paddingVertical: 2 }}>
-                <View style={{ flexDirection: 'row' }}>
-                  <View style={{ flex: 1, paddingRight: 10 }}>
-                    <Text style={{ fontSize: 11, color: Color.textMuted, marginBottom: 6 }}>{this.props.dateTime}</Text>
-                    <View style={{ position: 'relative', marginBottom: 10 }}>
-                      <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-                        <View style={{ width: 10, height: 10, borderRadius: 5, marginRight: 8, marginTop: 6, borderWidth: 2, borderColor: Color.grayLight }} />
-                        <View>
-                          <Text style={{ fontWeight: 'bold' }}>{this.props.origin.geocode.title}</Text>
-                          <Text numberOfLines={1} style={{ fontSize: 11 }}>{this.props.origin.geocode.address}</Text>
-                        </View>
-                      </View>
-                      <View style={{ flexDirection: 'row' }}>
-                        <View style={{ width: 10, height: 10, borderRadius: 5, marginRight: 8, marginTop: 6, backgroundColor: Color.primary }} />
-                        <View>
-                          <Text style={{ fontWeight: 'bold' }}>{this.props.destination.geocode.title}</Text>
-                          <Text numberOfLines={1} style={{ fontSize: 11 }}>{this.props.destination.geocode.address}</Text>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                  <Text style={{ fontWeight: 'bold' }}>{this.props.fare}</Text>
-                </View>
-                <View style={{ flexDirection: 'row' }}>
-                  <Text style={{ fontSize: 13, fontWeight: 'bold', backgroundColor: statusColor, color: colorYiq(statusColor), borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1.5 }}><Fa name='hashtag' />{statusText}</Text>
-                </View>
-              </View>
-            </View>
-          </View>
-        </View>
-      )
-    }
+
     if (Platform.OS === 'android') {
       return (
         <TouchableNativeFeedback
@@ -1386,7 +1423,44 @@ export class OrderHistoryItem extends Component {
           background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15', false)}
           onPress={this.props.onPress}
         >
-          <Component />
+          <View style={{ paddingHorizontal: 15 }}>
+            <View style={{ paddingVertical: 15, borderBottomWidth: this.props.last ? 0 : 1, borderBottomColor: Color.grayLight }}>
+              <View style={{ flexDirection: 'row' }}>
+                <View>
+                  <View style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: iconColor }}>
+                    <Fa color={colorYiq(iconColor)} size={20} name={iconName} />
+                  </View>
+                </View>
+                <View style={{ flex: 1, paddingLeft: 15, paddingVertical: 2 }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                      <Text style={{ fontSize: 11, color: Color.textMuted, marginBottom: 6 }}>{this.props.dateTime}</Text>
+                      <View style={{ position: 'relative', marginBottom: 10 }}>
+                        <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, marginRight: 8, marginTop: 6, borderWidth: 2, borderColor: Color.grayLight }} />
+                          <View>
+                            <Text style={{ fontWeight: 'bold' }}>{this.props.origin.geocode.title}</Text>
+                            <Text numberOfLines={1} style={{ fontSize: 11 }}>{this.props.origin.geocode.address}</Text>
+                          </View>
+                        </View>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, marginRight: 8, marginTop: 6, backgroundColor: Color.primary }} />
+                          <View>
+                            <Text style={{ fontWeight: 'bold' }}>{this.props.destination.geocode.title}</Text>
+                            <Text numberOfLines={1} style={{ fontSize: 11 }}>{this.props.destination.geocode.address}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                    <Text style={{ fontWeight: 'bold' }}>{this.props.fare}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', backgroundColor: statusColor, color: colorYiq(statusColor), borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1.5 }}><Fa name='hashtag' />{statusText}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
         </TouchableNativeFeedback>
       )
     } else {
@@ -1396,7 +1470,44 @@ export class OrderHistoryItem extends Component {
           activeOpacity={0.85}
           onPress={this.props.onPress}
         >
-          <Component />
+          <View style={{ paddingHorizontal: 15 }}>
+            <View style={{ paddingVertical: 15, borderBottomWidth: this.props.last ? 0 : 1, borderBottomColor: Color.grayLight }}>
+              <View style={{ flexDirection: 'row' }}>
+                <View>
+                  <View style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 20, backgroundColor: iconColor }}>
+                    <Fa color={colorYiq(iconColor)} size={20} name={iconName} />
+                  </View>
+                </View>
+                <View style={{ flex: 1, paddingLeft: 15, paddingVertical: 2 }}>
+                  <View style={{ flexDirection: 'row' }}>
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                      <Text style={{ fontSize: 11, color: Color.textMuted, marginBottom: 6 }}>{this.props.dateTime}</Text>
+                      <View style={{ position: 'relative', marginBottom: 10 }}>
+                        <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, marginRight: 8, marginTop: 6, borderWidth: 2, borderColor: Color.grayLight }} />
+                          <View>
+                            <Text style={{ fontWeight: 'bold' }}>{this.props.origin.geocode.title}</Text>
+                            <Text numberOfLines={1} style={{ fontSize: 11 }}>{this.props.origin.geocode.address}</Text>
+                          </View>
+                        </View>
+                        <View style={{ flexDirection: 'row' }}>
+                          <View style={{ width: 10, height: 10, borderRadius: 5, marginRight: 8, marginTop: 6, backgroundColor: Color.primary }} />
+                          <View>
+                            <Text style={{ fontWeight: 'bold' }}>{this.props.destination.geocode.title}</Text>
+                            <Text numberOfLines={1} style={{ fontSize: 11 }}>{this.props.destination.geocode.address}</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                    <Text style={{ fontWeight: 'bold' }}>{this.props.fare}</Text>
+                  </View>
+                  <View style={{ flexDirection: 'row' }}>
+                    <Text style={{ fontSize: 13, fontWeight: 'bold', backgroundColor: statusColor, color: colorYiq(statusColor), borderRadius: 3, paddingHorizontal: 3, paddingVertical: 1.5 }}><Fa name='hashtag' />{statusText}</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
         </TouchableHighlight>
       )
     }

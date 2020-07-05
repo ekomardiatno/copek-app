@@ -71,7 +71,6 @@ export default class Main extends Component {
     wrappedPromise.promise
       .then(user => {
         if (user !== null) {
-          this._getCheckOrderStatus()
           BackgroundGeolocation.on('location', this._onLocation)
           GPSState.getStatus()
             .then(status => {
@@ -190,69 +189,6 @@ export default class Main extends Component {
           }
         }
       )
-    })
-  }
-
-  _getCheckOrderStatus = () => {
-    const wrappedPromise = cancellablePromise(this._promiseCheckOrderStatus())
-    this.appendPendingPromise(wrappedPromise)
-    wrappedPromise.promise
-      .then(res => {
-        if(res.length > 0) {
-          for(let i = 0; i < res.length; i++) {
-            AsyncStorage.getItem('orders', (err, order) => {
-              if (order !== null) {
-                order = JSON.parse(order)
-                let index = order.map(item => {
-                  return item.orderId
-                }).indexOf(res[i].orderId.toString())
-                if(res[i].status !== null) {
-                  order[index].status = res[i].status
-                } else {
-                  order.splice(index, 1)
-                }
-                AsyncStorage.setItem('orders', JSON.stringify(order))
-              }
-            })
-          }
-        }
-      })
-      .then(() => this.removePendingPromise(wrappedPromise))
-      .catch(err => {
-        this._getCheckOrderStatus()
-      })
-  }
-
-  _promiseCheckOrderStatus = () => {
-    return new Promise((resolve, reject) => {
-      AsyncStorage.getItem('orders', (error, result) => {
-        if(!error && result !== null) {
-          result = JSON.parse(result)
-          let filtered = result.filter(a => {
-            return a.status !== 'completed' && a.status !== 'cancelled_by_user' && a.status !== 'cancelled_by_driver'
-          })
-          if(filtered.length > 0) {
-            filtered = filtered.map(a => {
-              return a.orderId
-            })
-            fetch(`${HOST_REST_API}order/checking`, {
-              method: 'post',
-              headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(filtered)
-            })
-              .then(res => res.json())
-              .then(resolve)
-              .catch(reject)
-          } else {
-            resolve([])
-          }
-        } else {
-          resolve([])
-        }
-      })
     })
   }
 
