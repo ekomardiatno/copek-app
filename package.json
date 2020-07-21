@@ -10,9 +10,11 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@mauron85/react-native-background-geolocation": "^0.6.3",
     "react": "16.11.0",
     "react-native": "0.62.2",
     "react-native-admob": "^2.0.0-beta.6",
+    "react-native-gps-state": "^2.0.3",
     "react-native-maps": "^0.27.1"
   },
   "devDependencies": {
