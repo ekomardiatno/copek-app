@@ -162,7 +162,7 @@ export default class Main extends Component {
       .catch(err => {
         Alert.alert(
           'Koneksi gagal',
-          'Cek koneksi internet di perangat Anda',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -292,7 +292,7 @@ export default class Main extends Component {
       .catch(() => {
         Alert.alert(
           'Koneksi gagal',
-          'Cek koneksi wifi atau paket data dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',

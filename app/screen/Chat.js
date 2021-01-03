@@ -114,7 +114,7 @@ export default class Chat extends Component {
         .catch(err => {
           Alert.alert(
             'Gagal mendapatkan obrolan',
-            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+            'Terjadi kesalahan pada sistem, coba lagi nanti',
             [
               {
                 text: 'Coba lagi',

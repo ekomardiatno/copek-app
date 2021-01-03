@@ -357,7 +357,7 @@ class Booking extends Component {
       .catch(err => {
         Alert.alert(
           'Gagal memperbarui status pesanan',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -442,7 +442,7 @@ class Booking extends Component {
       .catch(err => {
         Alert.alert(
           'Gagal mendapatkan obrolan',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -646,7 +646,7 @@ class Booking extends Component {
             .catch(error => {
               Alert.alert(
                 'Gagal membuat rute',
-                'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+                'Terjadi kesalahan pada sistem, coba lagi nanti',
                 [
                   {
                     text: 'Coba lagi',
@@ -732,7 +732,7 @@ class Booking extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan driver',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -922,9 +922,9 @@ class Booking extends Component {
       })
       .catch(err => {
         if (Platform.OS === 'android') {
-          ToastAndroid.show('Periksa koneksi internet anda', ToastAndroid.SHORT)
+          ToastAndroid.show('Terjadi kesalahan pada sistem, coba lagi nanti', ToastAndroid.SHORT)
         } else {
-          Toast.show('Periksa koneksi internet anda', Toast.SHORT)
+          Toast.show('Terjadi kesalahan pada sistem, coba lagi nanti', Toast.SHORT)
         }
         BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
         this.props.navigation.goBack()
@@ -1004,7 +1004,7 @@ class Booking extends Component {
         .catch(err => {
           Alert.alert(
             'Gagal membatalkan pesanan',
-            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+            'Terjadi kesalahan pada sistem, coba lagi nanti',
             [
               {
                 text: 'Coba lagi',

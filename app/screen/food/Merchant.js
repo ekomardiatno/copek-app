@@ -110,7 +110,7 @@ export default class Merchant extends Component {
       .catch((error) => {
         Alert.alert(
           'Gagal mendapatkan lokasi terkini',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -184,7 +184,7 @@ export default class Merchant extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info resto',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -228,7 +228,7 @@ export default class Merchant extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan data makanan',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',

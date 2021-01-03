@@ -117,7 +117,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan lokasi terkini',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -163,7 +163,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info lokasi',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -213,7 +213,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal menghitung jarak',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -280,7 +280,7 @@ export default class Order extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info resto',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -445,7 +445,7 @@ export default class Order extends Component {
       .catch(err => {
         Alert.alert(
           'Gagal membuat pesanan',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi'
+          'Terjadi kesalahan pada sistem, coba lagi nanti'
         )
       })
   }

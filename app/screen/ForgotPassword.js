@@ -59,7 +59,7 @@ export default class ForgotPassword extends Component {
         .catch(err => {
           Alert.alert(
             'Koneksi gagal',
-            'Periksa koneksi internet anda, lalu coba lagi'
+            'Terjadi kesalahan pada sistem, pastikan Anda telah menggunakan aplikasi terbaru dan coba lagi nanti'
           )
         })
     })

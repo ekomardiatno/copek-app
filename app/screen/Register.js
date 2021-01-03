@@ -74,7 +74,7 @@ export default class Register extends Component {
           }, () => {
             Alert.alert(
               'Koneksi Gagal',
-              'Periksa koneksi internet anda'
+              'Terjadi kesalahan pada sistem, coba lagi nanti'
             )
           })
         })

@@ -92,7 +92,7 @@ export default class ListMenu extends Component {
       .catch(error => {
         Alert.alert(
           'Koneksi gagal',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
