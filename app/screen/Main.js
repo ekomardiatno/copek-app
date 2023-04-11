@@ -350,7 +350,6 @@ export default class Main extends Component {
           <Animated.ScrollView
             showsVerticalScrollIndicator={false}
             bounces={false}
-            onMomentumScrollEnd={this.scrollEndDrag}
             scrollEventThrottle={16}
             onScroll={Animated.event([
               {
@@ -358,7 +357,7 @@ export default class Main extends Component {
               }
             ])}
           >
-            <View style={{ marginTop: 3 / 4 * width,minHeight: height - (3 / 4 * width) - 50,height: this.state.ready ? null : height - (3 / 4 * width) - 50 }}>
+            <View style={{ marginTop: 3 / 4 * width,minHeight: height - (3 / 4 * width) - 50,height: height - (3 / 4 * width) - 50 }}>
               <Animated.View style={{ marginTop: -30,flex: 1,borderTopLeftRadius: borderRadiusContainer,borderTopRightRadius: borderRadiusContainer,paddingVertical: 15,paddingHorizontal: 0,backgroundColor: Color.white,marginHorizontal: marginContainer,elevation: 20 }}>
                 {
                   this.state.statusConnection === 'ERROR' &&
