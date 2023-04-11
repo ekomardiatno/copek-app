@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { View, StatusBar, ScrollView, Image, Text, TouchableNativeFeedback, BackHandler, Platform , TouchableHighlight} from 'react-native'
+import { View, StatusBar, ScrollView, Image, Text, TouchableNativeFeedback, BackHandler, Platform , TouchableHighlight, ActivityIndicator} from 'react-native'
 import { SimpleHeader, Input } from '../components/Components'
 import Color from '../components/Color'
 import Spinner from 'react-native-spinkit'
@@ -42,7 +42,7 @@ class SearchPlaces extends Component {
       .catch((error) => {
         Alert.alert(
           'Gagal mendapatkan lokasi terkini',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -102,7 +102,7 @@ class SearchPlaces extends Component {
         .catch((error) => {
           Alert.alert(
             'Gagal mendapatkan tempat',
-            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+            'Terjadi kesalahan pada sistem, coba lagi nanti',
             [
               {
                 text: 'Coba lagi',
@@ -200,13 +200,13 @@ class SearchPlaces extends Component {
               >
                 {
                   this.props.locations.places.results.length > 0 ?
-                    this.props.locations.places.results.map(p => (
+                    this.props.locations.places.results.map((p, i) => (
                       Platform.OS === 'android' ?
                         <TouchableNativeFeedback
                           onPress={() => {
                             this._chooseLocation(p.geometry.location.lat, p.geometry.location.lng, p.name)
                           }}
-                          key={p.id}
+                          key={i}
                           useForeground={true}
                           background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
                         >
@@ -226,7 +226,7 @@ class SearchPlaces extends Component {
                         </TouchableNativeFeedback>
                         :
                         <TouchableHighlight
-                          key={p.id}
+                          key={i}
                           onPress={() => {
                             this._chooseLocation(p.geometry.location.lat, p.geometry.location.lng, p.name)
                           }}
@@ -272,7 +272,7 @@ class SearchPlaces extends Component {
         {
           this.state.region == null &&
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Color.white, alignItems: 'center', justifyContent: 'center' }}>
-            <Spinner isVisible={true} size={100} type='Circle' color={Color.green} />
+            <ActivityIndicator size={100} color={Color.green} />
           </View>
         }
       </View>

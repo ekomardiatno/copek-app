@@ -63,7 +63,6 @@ export default class History extends Component {
     wrappedPromise.promise
       .then(res => {
         AdMobInterstitial.setAdUnitID('ca-app-pub-8047867116429118/6848645771')
-        AdMobInterstitial.setTestDevices([AdMobInterstitial.simulatorId])
         AdMobInterstitial.requestAd().then(() => AdMobInterstitial.showAd())
         if (res.length > 0) {
           for (let i = 0; i < res.length; i++) {
@@ -171,7 +170,7 @@ export default class History extends Component {
             errorFetch === true ?
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30 }}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan daftar pesanan</Text>
-                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Terjadi kesalahan pada sistem, coba lagi nanti</Text>
                 <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
                   <Button style={{ marginHorizontal: 5 }} onPress={this._getCheckOrderStatus} red title='Coba lagi' />
                 </View>

@@ -351,7 +351,7 @@ class Home extends Component {
                   :
                   <Image style={{ width: '100%', height: '100%' }} source={require('../../images/icons/passenger-marker.png')} />
               }
-              <View style={{ position: 'absolute', left: (25 / 2), top: 3 }}>
+              <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', justifyContent: 'center', top: 3 }}>
                 <Spinner
                   type='Circle'
                   color={Color.white}
@@ -376,7 +376,7 @@ class Home extends Component {
               this.state.errorLocation &&
               <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Color.white, zIndex: 20, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan lokasi saat ini</Text>
-                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Terjadi kesalahan pada sistem, coba lagi nanti</Text>
                 <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
                   <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
                   <Button style={{ marginHorizontal: 5 }} onPress={this._mapReady} red title='Coba lagi' />
@@ -387,7 +387,7 @@ class Home extends Component {
               this.state.errorGeocode &&
               <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: Color.white, zIndex: 20, alignItems: 'center', justifyContent: 'center' }}>
                 <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Gagal mendapatkan info lokasi</Text>
-                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Silakan cek koneksi wifi atau paket selular Anda</Text>
+                <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Terjadi kesalahan pada sistem, coba lagi nanti</Text>
                 <View style={{ flexDirection: 'row', marginHorizontal: -5, marginTop: 15 }}>
                   <Button style={{ marginHorizontal: 5 }} onPress={() => this.props.navigation.goBack()} secondary title='Kembali' />
                   <Button style={{ marginHorizontal: 5 }} onPress={this._getGeocode} red title='Coba lagi' />

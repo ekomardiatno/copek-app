@@ -4,7 +4,6 @@ import MapView, { PROVIDER_GOOGLE, Marker, AnimatedRegion, Polyline as Direction
 import { LATITUDE_DELTA, LONGITUDE_DELTA, NODE_APP_URL, HOST_REST_API } from '../components/Define'
 import Color, { colorYiq } from '../components/Color'
 import { Button, BookingStatus, Card, SimpleHeader } from '../components/Components'
-import Spinner from 'react-native-spinkit'
 import Fa from 'react-native-vector-icons/FontAwesome5'
 import { getNearDrivers } from '../actions/drivers.actions'
 import { getDirections } from '../actions/locations.actions'
@@ -178,8 +177,8 @@ class Booking extends Component {
         this.setState({
           driver: this.state.driverTemporary,
           driverCoord: new AnimatedRegion({
-            latitude: this.state.driverTemporary.location.coordinates[1],
-            longitude: this.state.driverTemporary.location.coordinates[0],
+            latitude: this.state.driverTemporary.driverLatitude,
+            longitude: this.state.driverTemporary.driverLongitude,
             latitudeDelta: LATITUDE_DELTA,
             longitudeDelta: LONGITUDE_DELTA,
           })
@@ -214,20 +213,11 @@ class Booking extends Component {
     }.bind(this))
     socket.on(`${receiverId}_receive_coordinate`, function (coordinate) {
       let duration = 300
-      if (Platform.OS === 'android') {
-        if (this.driverMarker) {
-          this.driverMarker._component.animateMarkerToCoordinate(
-            coordinate,
-            duration
-          )
-        }
-      } else {
-        this.state.driverCoord !== null &&
-          this.state.driverCoord.timing({
-            ...coordinate,
-            duration: duration
-          }).start()
-      }
+      this.state.driverCoord !== null &&
+        this.state.driverCoord.timing({
+          ...coordinate,
+          duration: duration
+        }).start()
     }.bind(this))
     socket.on(`${receiverId}_receive_order_cancellation`, function () {
       AsyncStorage.getItem('orders', (err, order) => {
@@ -300,29 +290,6 @@ class Booking extends Component {
     })
   }
 
-  _deleteChats = () => {
-    const wrappedPromise = cancellablePromise(this._promiseDeleteChats())
-    this.appendPendingPromise(wrappedPromise)
-    wrappedPromise.promise
-      .then()
-      .then(() => {
-        this.removePendingPromise(wrappedPromise)
-      })
-      .catch()
-  }
-
-  _promiseDeleteChats = () => {
-    return new Promise((resolve, reject) => {
-      const { orderId } = this.state
-      fetch(`${NODE_APP_URL}chats/${orderId}`, {
-        method: 'DELETE'
-      })
-        .then(res => res.json())
-        .then(resolve)
-        .catch(reject)
-    })
-  }
-
   _getOrderStatus = () => {
     const { orderId } = this.state
     const wrappedPromise = cancellablePromise(this._promiseGetOrderStatus())
@@ -341,11 +308,7 @@ class Booking extends Component {
                   return item.orderId
                 }).indexOf(orderId.toString())
                 order[index].status = status
-                AsyncStorage.setItem('orders', JSON.stringify(order), () => {
-                  if (status === 'completed' || status === 'cancelled_by_user' || status === 'cancelled_by_driver') {
-                    this._deleteChats()
-                  }
-                })
+                AsyncStorage.setItem('orders', JSON.stringify(order))
               }
             })
           })
@@ -357,7 +320,7 @@ class Booking extends Component {
       .catch(err => {
         Alert.alert(
           'Gagal memperbarui status pesanan',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -387,7 +350,8 @@ class Booking extends Component {
     this.appendPendingPromise(wrappedPromise)
     wrappedPromise.promise
       .then(chat => {
-        if (chat.length > 0) {
+        if (chat.status === 'OK' && chat.data.length > 0) {
+          chat = chat.data
           this.setState({
             chats: chat,
           }, () => {
@@ -442,7 +406,7 @@ class Booking extends Component {
       .catch(err => {
         Alert.alert(
           'Gagal mendapatkan obrolan',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -456,9 +420,9 @@ class Booking extends Component {
 
   _promiseGetChats = () => {
     return new Promise((resolve, reject) => {
-      const { orderId, chats } = this.state
+      const { orderId } = this.state
       if (orderId !== null) {
-        fetch(`${NODE_APP_URL}chats/${orderId}`)
+        fetch(`${HOST_REST_API}chat/history/${orderId}`)
           .then(res => res.json())
           .then(resolve)
           .catch(reject)
@@ -524,8 +488,8 @@ class Booking extends Component {
         customer,
         note,
         driverCoord: new AnimatedRegion({
-          latitude: driver.location.coordinates[1],
-          longitude: driver.location.coordinates[0],
+          latitude: driver.driverLatitude,
+          longitude: driver.driverLongitude,
           latitudeDelta: LATITUDE_DELTA,
           longitudeDelta: LONGITUDE_DELTA,
         }),
@@ -543,9 +507,7 @@ class Booking extends Component {
           }
         }.bind(this))
         this._makePolyline()
-        if (status === 'completed' || status === 'cancelled_by_user' || status === 'cancelled_by_driver') {
-          this._deleteChats()
-        } else {
+        if (status !== 'completed' && status !== 'cancelled_by_user' && status !== 'cancelled_by_driver') {
           if (this.socket) {
             this._socket()
           }
@@ -567,8 +529,8 @@ class Booking extends Component {
       if (status === 'towards_resto') {
         polylineCoords = {
           origin: {
-            latitude: driver.location.coordinates[1],
-            longitude: driver.location.coordinates[0]
+            latitude: driver.driverLatitude,
+            longitude: driver.driverLongitude
           },
           destination: {
             latitude: merchant.merchantLatitude,
@@ -593,8 +555,8 @@ class Booking extends Component {
       if (status === 'towards_customer') {
         polylineCoords = {
           origin: {
-            latitude: driver.location.coordinates[1],
-            longitude: driver.location.coordinates[0]
+            latitude: driver.driverLatitude,
+            longitude: driver.driverLongitude
           },
           destination: {
             latitude: origin.geometry.latitude,
@@ -646,7 +608,7 @@ class Booking extends Component {
             .catch(error => {
               Alert.alert(
                 'Gagal membuat rute',
-                'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+                'Terjadi kesalahan pada sistem, coba lagi nanti',
                 [
                   {
                     text: 'Coba lagi',
@@ -685,6 +647,7 @@ class Booking extends Component {
     this.appendPendingPromise(wrappedPromise)
     wrappedPromise.promise
       .then(drivers => {
+        console.log(drivers)
         if (drivers.length > 0) {
           const date = new Date()
           let d = date.getDate();
@@ -732,7 +695,7 @@ class Booking extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan driver',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -751,11 +714,10 @@ class Booking extends Component {
   }
 
   _findConnectedDriver = () => {
-
     const { driverCandidate, indexCandidate, isConnected, orderType, carts, origin, destination, fare, distances, merchant, status, customer, note, dateString } = this.state
     if (this.socket && isConnected) {
       if (driverCandidate.length > 0 && driverCandidate[indexCandidate]) {
-        this.socket.emit('isConnected', driverCandidate[indexCandidate].socketId, function (result) {
+        this.socket.emit('isConnected', driverCandidate[indexCandidate].driverSocketId, function (result) {
           if (result) {
             const driver = {
               driverId: driverCandidate[indexCandidate].driverId,
@@ -764,12 +726,8 @@ class Booking extends Component {
               driverPhone: driverCandidate[indexCandidate].driverPhone,
               driverEmail: driverCandidate[indexCandidate].driverEmail,
               driverPicture: driverCandidate[indexCandidate].driverPicture,
-              location: {
-                coordinates: [
-                  driverCandidate[indexCandidate].location.coordinates[0],
-                  driverCandidate[indexCandidate].location.coordinates[1]
-                ]
-              }
+              driverLatitude: Number(driverCandidate[indexCandidate].driverLatitude),
+              driverLongitude: Number(driverCandidate[indexCandidate].driverLongitude)
             }
             this.setState({
               driverTemporary: driver
@@ -830,7 +788,7 @@ class Booking extends Component {
   }
 
   _postOrder = () => {
-    const { orderType, carts, origin, destination, fare, distances, merchant, status, customer, note, driver, dateString, orderId, driverTemporary } = this.state
+    const { orderType, carts, origin, destination, fare, distances, merchant, status, customer, note, driver, dateString, orderId } = this.state
     let estimatedPrice = 0
     if (carts !== undefined) {
       carts.map((c) => {
@@ -922,9 +880,9 @@ class Booking extends Component {
       })
       .catch(err => {
         if (Platform.OS === 'android') {
-          ToastAndroid.show('Periksa koneksi internet anda', ToastAndroid.SHORT)
+          ToastAndroid.show('Terjadi kesalahan pada sistem, coba lagi nanti', ToastAndroid.SHORT)
         } else {
-          Toast.show('Periksa koneksi internet anda', Toast.SHORT)
+          Toast.show('Terjadi kesalahan pada sistem, coba lagi nanti', Toast.SHORT)
         }
         BackHandler.removeEventListener('hardwareBackPress', this.preventBackButton)
         this.props.navigation.goBack()
@@ -973,11 +931,7 @@ class Booking extends Component {
                   return item.orderId
                 }).indexOf(orderId.toString())
                 order[index].status = status
-                AsyncStorage.setItem('orders', JSON.stringify(order), () => {
-                  if (status === 'completed' || status === 'cancelled_by_user' || status === 'cancelled_by_driver') {
-                    this._deleteChats()
-                  }
-                })
+                AsyncStorage.setItem('orders', JSON.stringify(order))
               }
             })
             if (driver != null) {
@@ -1004,7 +958,7 @@ class Booking extends Component {
         .catch(err => {
           Alert.alert(
             'Gagal membatalkan pesanan',
-            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+            'Terjadi kesalahan pada sistem, coba lagi nanti',
             [
               {
                 text: 'Coba lagi',
@@ -1120,7 +1074,7 @@ class Booking extends Component {
               <View style={{ padding: 15 }}>
                 <Text style={{ marginTop: 5, fontWeight: 'bold', fontSize: 18, marginBottom: 10, textAlign: 'center' }}>Mencari driver...</Text>
                 <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-                  <Spinner isVisible={true} size={100} type='Pulse' color={Color.green} />
+                  <ActivityIndicator size={100} color={Color.green} />
                 </View>
               </View>
             }

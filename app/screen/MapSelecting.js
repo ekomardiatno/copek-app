@@ -94,7 +94,7 @@ class MapSelecting extends Component {
         .catch((error) => {
           Alert.alert(
             'Gagal mendapatkan lokasi terkini',
-            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+            'Terjadi kesalahan pada sistem, coba lagi nanti',
             [
               {
                 text: 'Coba lagi',
@@ -187,7 +187,7 @@ class MapSelecting extends Component {
       .catch(error => {
         Alert.alert(
           'Gagal mendapatkan info lokasi',
-          'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+          'Terjadi kesalahan pada sistem, coba lagi nanti',
           [
             {
               text: 'Coba lagi',
@@ -307,24 +307,7 @@ class MapSelecting extends Component {
               initialRegion={this.state.region}
               style={{ flex: 1 }}
               mapPadding={{ top: Platform.OS === 'android' ? StatusBar.currentHeight: 40, left: 0, right: 0, bottom: 196 }}
-            >
-              {/* {
-                    this.state.currentLocation
-                      ?
-                      <Marker.Animated
-                        coordinate={this.state.markerCoords}
-                      >
-                        <View>
-                          <Spinner isVisible={true} size={40} type='Pulse' color={Color.blue} />
-                          <View style={{ position: 'absolute', width: 40, height: 40, top: 0, left: 0, alignItems: 'center', justifyContent: 'center' }}>
-                            <View style={{ width: 20, height: 20, borderRadius: 20 / 2, borderWidth: 3, borderColor: Color.white, elevation: 5, backgroundColor: Color.blue }}></View>
-                          </View>
-                        </View>
-                      </Marker.Animated>
-                      :
-                      null
-                  } */}
-            </MapView>
+            />
             <View style={{ position: 'absolute', top: '50%', left: '50%', marginTop: -142, marginLeft: -30, width: 60, height: 60 }}>
               {
                 this.props.navigation.getParam('selectType') && this.props.navigation.getParam('selectType') === 'pickup' ?
@@ -332,11 +315,11 @@ class MapSelecting extends Component {
                   :
                   <Image style={{ width: '100%', height: '100%' }} source={require('../images/icons/destination-marker.png')} />
               }
-              <View style={{ position: 'absolute', left: (23 / 2), top: 1 }}>
+              <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', justifyContent: 'center', top: 3 }}>
                 <Spinner
                   type='Circle'
                   color={Color.white}
-                  size={30}
+                  size={Platform.OS === 'ios' ? 28 : 35}
                   isVisible={this.state.geocode != null && this.state.currentLocation ? false : true}
                 />
               </View>
@@ -353,7 +336,7 @@ class MapSelecting extends Component {
           }}
         >
           <View style={{ backgroundColor: Color.white, position: 'absolute', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
-            <Spinner isVisible={true} size={100} type='ThreeBounce' color={Color.green} />
+            <ActivityIndicator size={100} color={Color.green} />
           </View>
           <Animated.View style={{ backgroundColor: Color.white, paddingHorizontal: 15, opacity: this.state.loading }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 5, marginBottom: 5 }}>

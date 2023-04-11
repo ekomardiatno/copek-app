@@ -19,7 +19,7 @@ import Color, { colorYiq } from '../components/Color'
 const Sound = require('react-native-sound')
 import phoneNumFormat from '../helpers/phoneNumFormat'
 import dateFormatted from '../helpers/dateFormatted'
-import { NODE_APP_URL } from '../components/Define'
+import { HOST_REST_API, NODE_APP_URL } from '../components/Define'
 import AsyncStorage from '@react-native-community/async-storage'
 import getImageThumb from '../helpers/getImageThumb'
 import KeyboardSpacer from 'react-native-keyboard-spacer'
@@ -89,10 +89,11 @@ export default class Chat extends Component {
   _getChats = () => {
     const { orderId } = this.state
     if (orderId !== null) {
-      fetch(`${NODE_APP_URL}chats/${orderId}`)
+      fetch(`${HOST_REST_API}chat/history/${orderId}`)
         .then(res => res.json())
         .then(chat => {
-          if (chat.length > 0) {
+          if (chat.status === 'OK' && chat.data.length > 0) {
+            chat = chat.data
             this.setState({
               chats: chat
             }, () => {
@@ -114,7 +115,7 @@ export default class Chat extends Component {
         .catch(err => {
           Alert.alert(
             'Gagal mendapatkan obrolan',
-            'Cek koneksi wifi atau jaringan seluler Anda dan coba lagi',
+            'Terjadi kesalahan pada sistem, coba lagi nanti',
             [
               {
                 text: 'Coba lagi',
@@ -150,7 +151,7 @@ export default class Chat extends Component {
   _onSendChat = () => {
     const { socket, chatText, driver, orderId } = this.state
     if (chatText.length > 0) {
-      fetch(`${NODE_APP_URL}chats`, {
+      fetch(`${HOST_REST_API}chat/post`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -163,35 +164,38 @@ export default class Chat extends Component {
       })
         .then(res => res.json())
         .then(chat => {
-          this.setState({
-            chats: [
-              ...this.state.chats,
-              {
+          if (chat.status === 'OK') {
+            chat = chat.data
+            this.setState({
+              chats: [
+                ...this.state.chats,
+                {
+                  orderId: chat.orderId,
+                  sender: chat.sender,
+                  text: chat.text,
+                  dateTime: chat.dateTime
+                }
+              ],
+              chatText: ''
+            }, () => {
+              this.sound.play()
+              this._saveOnStorage({
                 orderId: chat.orderId,
                 sender: chat.sender,
                 text: chat.text,
                 dateTime: chat.dateTime
-              }
-            ],
-            chatText: ''
-          }, () => {
-            this.sound.play()
-            this._saveOnStorage({
-              orderId: chat.orderId,
-              sender: chat.sender,
-              text: chat.text,
-              dateTime: chat.dateTime
+              })
+              socket.emit('send_chat', {
+                receiverId: driver.driverId,
+                data: {
+                  orderId: chat.orderId,
+                  sender: chat.sender,
+                  text: chat.text,
+                  dateTime: chat.dateTime
+                }
+              })
             })
-            socket.emit('send_chat', {
-              receiverId: driver.driverId,
-              data: {
-                orderId: chat.orderId,
-                sender: chat.sender,
-                text: chat.text,
-                dateTime: chat.dateTime
-              }
-            })
-          })
+          }
         })
     }
   }
@@ -337,8 +341,8 @@ export default class Chat extends Component {
                   chats.map((chat, i) => {
                     if (chat.sender === 'driver') {
                       return (
-                        <View>
-                          <View key={i} style={{ paddingHorizontal: 15, paddingVertical: 5, paddingRight: 50 }}>
+                        <View key={i}>
+                          <View style={{ paddingHorizontal: 15, paddingVertical: 5, paddingRight: 50 }}>
                             <View style={{
                               flexDirection: 'row', marginTop: i === 0 ? 10 : 0, marginBottom:
                                 chats[i + 1] === undefined ?
@@ -352,11 +356,11 @@ export default class Chat extends Component {
                             </View>
                           </View>
                           {
-                            chats[i+1] === undefined ?
+                            chats[i + 1] === undefined ?
                               <Text style={{ textAlign: 'left', marginLeft: 20, fontSize: 10, color: Color.textMuted }}>{dateFormatted(chat.dateTime, true, true)}</Text>
                               :
-                              dateFormatted(chats[i].dateTime, true, true) !== dateFormatted(chats[i+1].dateTime, true, true) || chats[i].sender !== chats[i+1].sender &&
-                                <Text style={{ textAlign: 'left', marginLeft: 20, fontSize: 10, color: Color.textMuted }}>{dateFormatted(chat.dateTime, true, true)}</Text>
+                              dateFormatted(chats[i].dateTime, true, true) !== dateFormatted(chats[i + 1].dateTime, true, true) || chats[i].sender !== chats[i + 1].sender &&
+                              <Text style={{ textAlign: 'left', marginLeft: 20, fontSize: 10, color: Color.textMuted }}>{dateFormatted(chat.dateTime, true, true)}</Text>
                           }
                         </View>
                       )
@@ -377,11 +381,11 @@ export default class Chat extends Component {
                             </View>
                           </View>
                           {
-                            chats[i+1] === undefined ?
+                            chats[i + 1] === undefined ?
                               <Text style={{ textAlign: 'right', marginRight: 20, fontSize: 10, color: Color.textMuted }}>{dateFormatted(chat.dateTime, true, true)}</Text>
                               :
-                              dateFormatted(chats[i].dateTime, true, true) !== dateFormatted(chats[i+1].dateTime, true, true) || chats[i].sender !== chats[i+1].sender &&
-                                <Text style={{ textAlign: 'right', marginRight: 20, fontSize: 10, color: Color.textMuted }}>{dateFormatted(chat.dateTime, true, true)}</Text>
+                              dateFormatted(chats[i].dateTime, true, true) !== dateFormatted(chats[i + 1].dateTime, true, true) || chats[i].sender !== chats[i + 1].sender &&
+                              <Text style={{ textAlign: 'right', marginRight: 20, fontSize: 10, color: Color.textMuted }}>{dateFormatted(chat.dateTime, true, true)}</Text>
                           }
                         </View>
                       )
@@ -440,7 +444,7 @@ export default class Chat extends Component {
         </View>
         {
           Platform.OS === 'ios' &&
-            <KeyboardSpacer/>
+          <KeyboardSpacer />
         }
       </View>
     )
