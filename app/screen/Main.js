@@ -1,9 +1,7 @@
 import React, { Component } from 'react'
-import { View, Text, StatusBar, TouchableOpacity, Dimensions, ScrollView, Image, Alert, Linking, BackHandler, AppState, Platform } from 'react-native'
-import Color, { colorYiq } from '../components/Color'
+import { View, StatusBar, Dimensions, Alert, BackHandler, AppState, Platform, ActivityIndicator } from 'react-native'
+import Color from '../components/Color'
 import { MainMenu, DummyMainMenu } from '../components/Components'
-import dateFormatted from '../helpers/dateFormatted'
-import Fa from 'react-native-vector-icons/FontAwesome5'
 const { width, height } = Dimensions.get('window')
 import Animated from 'react-native-reanimated'
 import { HOST_REST_API } from '../components/Define'
@@ -386,11 +384,12 @@ export default class Main extends Component {
                 }
                 <View style={{ alignItems: 'center', marginBottom: 15 }}>
                   <View style={{ backgroundColor: Color.grayLighter, width: 300, height: 250 }}>
+                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+                      <ActivityIndicator size='large' color={Color.gray} />
+                    </View>
                     <AdMobBanner
                       adSize="mediumRectangle"
                       adUnitID="ca-app-pub-8047867116429118/7062955117"
-                    // testDevices={[AdMobBanner.simulatorId]}
-                    // onAdFailedToLoad={error => console.error(error)}
                     />
                   </View>
                 </View>

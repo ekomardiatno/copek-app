@@ -116,7 +116,7 @@ export default class ForgotPassword extends Component {
             <View style={{ paddingHorizontal: 30, marginVertical: 15 }}>
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() => Linking.openURL('whatsapp://send?phone=+6282288369844')}
+                onPress={() => Linking.openURL('whatsapp://send?phone=+62859106975774')}
               >
                 <View style={{ flexDirection: 'row' }}>
                   <Text style={{ fontSize: 13, textAlign: 'center' }}>Punya masalah lain saat ingin masuk? <Text style={{ fontSize: 13, fontWeight: 'bold' }}>Dapatkan bantuan Admin.</Text>
