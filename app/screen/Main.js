@@ -316,7 +316,7 @@ export default class Main extends Component {
     })
     const borderRadiusContainer = Animated.interpolate(this.state.scrollY,{
       inputRange: [0,60],
-      outputRange: [30,0],
+      outputRange: [20,0],
       extrapolate: 'clamp'
     })
     const opacityStatusBar = Animated.interpolate(this.state.scrollY,{
@@ -357,11 +357,11 @@ export default class Main extends Component {
               }
             ])}
           >
-            <View style={{ marginTop: 3 / 4 * width,minHeight: height - (3 / 4 * width) - 50,height: height - (3 / 4 * width) - 50 }}>
+            <View style={{ marginTop: 3 / 4 * width,minHeight: height - (3 / 4 * width) - 50 }}>
               <Animated.View style={{ marginTop: -30,flex: 1,borderTopLeftRadius: borderRadiusContainer,borderTopRightRadius: borderRadiusContainer,paddingVertical: 15,paddingHorizontal: 0,backgroundColor: Color.white,marginHorizontal: marginContainer,elevation: 20 }}>
                 {
                   this.state.statusConnection === 'ERROR' &&
-                  <View style={{ flexDirection: 'row',alignItems: 'center',paddingHorizontal: 10,paddingVertical: 10,marginHorizontal: 15,backgroundColor: Color.red,borderRadius: 4 }}>
+                  <View style={{ flexDirection: 'row',alignItems: 'center',paddingHorizontal: 10,paddingVertical: 10,marginHorizontal: 15,backgroundColor: Color.red,borderRadius: 4, marginTop: 5 }}>
                     <View style={{ flex: 1, marginHorizontal: 5 }}>
                       <Text style={{ color: colorYiq(Color.red),fontSize: 13 }}>Tidak dapat terhubung ke sistem</Text>
                     </View>
