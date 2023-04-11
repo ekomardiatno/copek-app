@@ -9,7 +9,8 @@ import {
   Dimensions,
   TouchableHighlight,
   Platform,
-  SafeAreaView
+  SafeAreaView,
+  ActivityIndicator
 } from 'react-native'
 import Color, { colorYiq } from './Color'
 import Feather from 'react-native-vector-icons/Feather'
@@ -23,7 +24,6 @@ import Animated, { Easing } from 'react-native-reanimated'
 const { width, height } = Dimensions.get('window')
 import getImageThumb from '../helpers/getImageThumb'
 import { AdMobBanner } from 'react-native-admob'
-import { SliderCard, Items } from '../components/Components'
 
 export class MerchantSection extends Component {
   cartRef = React.createRef()
@@ -55,41 +55,17 @@ export class MerchantSection extends Component {
     }
   }
 
-  layout = event => {
-    let heightLay = event.nativeEvent.layout.height
-    this.setState({
-      wrapperHeight: heightLay
-    })
-
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    if (this.state.scrollEnd != nextState.scrollEnd) {
-      return false
-    }
-    return true
-  }
-
-  scrollEndDrag = (e) => {
+  _lastestScrollY = 0
+  _momentumScrollEnd = (e) => {
     const { carts } = this.props
     if (carts.length > 0) {
-      if (e.nativeEvent.contentOffset.y > this.state.scrollEnd || e.nativeEvent.contentOffset.y >= (this.state.wrapperHeight - height)) {
-        Animated.timing(this.state.wrapperCart, {
-          duration: 250,
-          toValue: 100,
-          easing: Easing.inOut(Easing.ease),
-        }).start()
-      } else {
-        Animated.timing(this.state.wrapperCart, {
-          duration: 250,
-          toValue: 0,
-          easing: Easing.inOut(Easing.ease),
-        }).start()
-      }
-      this.setState({
-        scrollEnd: e.nativeEvent.contentOffset.y
-      })
+      Animated.timing(this.state.wrapperCart, {
+        duration: 250,
+        toValue: e.nativeEvent.contentOffset.y > this.state.scrollEnd ? 100 : 0,
+        easing: Easing.inOut(Easing.ease),
+      }).start()
     }
+    this._lastestScrollY = e.nativeEvent.contentOffset.y
   }
 
   render() {
@@ -101,18 +77,18 @@ export class MerchantSection extends Component {
     })
 
     const heightThumbnail = Animated.interpolate(this.state.scrollY, {
-      inputRange: [0, 140],
+      inputRange: [0, 190],
       outputRange: [heightImg, (Platform.OS === 'android' ? StatusBar.currentHeight : 40) + 60],
       extrapolate: 'clamp'
     })
 
     const opacityHeader = Animated.interpolate(this.state.scrollY, {
-      inputRange: [0, 120, 180],
+      inputRange: [0, 120, 190],
       outputRange: [0, 0, 1]
     })
 
     const opacityHideHeader = Animated.interpolate(this.state.scrollY, {
-      inputRange: [0, 120, 140],
+      inputRange: [0, 120, 190],
       outputRange: [1, 1, 0]
     })
 
@@ -121,7 +97,7 @@ export class MerchantSection extends Component {
     return (
       <View style={{ flex: 1 }}>
         <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', zIndex: 2, paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 40, paddingHorizontal: 15 }}>
-          <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,.35)', opacity: opacityHeader }}/>
+          <Animated.View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,.35)', opacity: opacityHeader }} />
           <View style={{ paddingVertical: 10 }}>
             {
               Platform.OS === 'android' ?
@@ -131,7 +107,7 @@ export class MerchantSection extends Component {
                   background={TouchableNativeFeedback.Ripple('rgba(0,0,0,.15)', false)}
                 >
                   <View style={{ height: 40, width: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                    <Animated.View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,.35)', opacity: opacityHideHeader }}/>
+                    <Animated.View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,.35)', opacity: opacityHideHeader }} />
                     <Text style={{ color: Color.white }}><Fa size={18} name='chevron-left' /></Text>
                   </View>
                 </TouchableNativeFeedback>
@@ -143,7 +119,7 @@ export class MerchantSection extends Component {
                   style={{ borderRadius: 20 }}
                 >
                   <View style={{ height: 40, width: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                    <Animated.View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,.35)', opacity: opacityHideHeader }}/>
+                    <Animated.View style={{ position: 'absolute', width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,.35)', opacity: opacityHideHeader }} />
                     <Text style={{ color: Color.white }}><Fa size={18} name='chevron-left' /></Text>
                   </View>
                 </TouchableHighlight>
@@ -191,16 +167,14 @@ export class MerchantSection extends Component {
           showsVerticalScrollIndicator={false}
           bounces={false}
           scrollEventThrottle={16}
-          onMomentumScrollEnd={this.scrollEndDrag}
+          onMomentumScrollEnd={this._momentumScrollEnd}
           onScroll={Animated.event([
             {
               nativeEvent: { contentOffset: { y: this.state.scrollY } }
             }
           ])}
         >
-          <View
-            onLayout={this.layout}
-          >
+          <View>
             <View style={{ backgroundColor: Color.white, borderBottomColor: Color.borderColor, borderBottomWidth: 1 }}>
               <View style={{ paddingHorizontal: 15, position: 'relative', paddingTop: heightImg }}>
                 <View style={{ marginTop: 20 }}>
@@ -221,6 +195,9 @@ export class MerchantSection extends Component {
             </View>
             <View style={{ paddingVertical: 10, alignItems: 'center' }}>
               <View style={{ backgroundColor: Color.grayLight, width: 320, height: 50 }}>
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+                  <ActivityIndicator size='large' color={Color.gray} />
+                </View>
                 <AdMobBanner
                   adSize="banner"
                   adUnitID="ca-app-pub-8047867116429118/7062955117"
@@ -342,60 +319,6 @@ export class MerchantSection extends Component {
               </SafeAreaView>
           }
         </Animated.View>
-      </View>
-    )
-  }
-}
-
-export class FoodHome extends Component {
-  render() {
-    return (
-      <View>
-        {
-          this.props.collection.map((item, i) => (
-            item.data.length ?
-              <View key={(i + 1) * Math.random()}>
-                {
-                  item.style === 'adSlideCard' ?
-                    <SliderCard
-                      navigate={(screen, data = null, params = {}) => {
-                        this.props._navigate(screen, data, params)
-                      }}
-                      data={item.data}
-                    />
-                    :
-                    <Items
-                      style={item.style}
-                      title={item.title[0]}
-                      subTitle={item.title[1]}
-                      more={() => {
-                        this.props._navigate(
-                          item.category === 'food' ? 'ListMenu' : 'ListMerchant',
-                          {
-                            cityName: this.props.currentLocation.cityName,
-                            position: this.props.position,
-                            orderBy: item.more
-                          }
-                        )
-                      }}
-                      navigate={this.props._navigate}
-                      category={item.category}
-                      product={item.data}
-                    />
-                }
-                {
-                  i === 0 &&
-                  <View style={{ backgroundColor: Color.grayLighter, height: 90, marginBottom: 5 }}>
-                    <AdMobBanner
-                      adSize="smartBanner"
-                      adUnitID="ca-app-pub-8047867116429118/7062955117"
-                    />
-                  </View>
-                }
-              </View>
-              : null
-          ))
-        }
       </View>
     )
   }
