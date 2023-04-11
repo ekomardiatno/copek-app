@@ -7,6 +7,7 @@ import cancellablePromise from '../helpers/cancellablePromise'
 import AsyncStorage from '@react-native-community/async-storage'
 import { HOST_REST_API } from '../components/Define'
 import KeyboardSpacer from 'react-native-keyboard-spacer'
+import { AdMobBanner, AdMobInterstitial } from 'react-native-admob'
 
 export default class Login extends Component {
   constructor(props) {
@@ -48,6 +49,8 @@ export default class Login extends Component {
         }
       }
     })
+    AdMobInterstitial.setAdUnitID('ca-app-pub-8047867116429118/6848645771')
+    AdMobInterstitial.requestAd().then(() => AdMobInterstitial.showAd())
   }
 
   componentWillUnmount() {
@@ -125,6 +128,25 @@ export default class Login extends Component {
                 onPress: this._login
               },
               {
+                text: 'Coba masuk',
+                onPress: () => {
+                  AsyncStorage.setItem(
+                    'user_logged_in',
+                    JSON.stringify({
+                      userId: 'u000123',
+                      userName: 'Testing',
+                      userEmail: 'testing@test.test',
+                      userPhone: '081234567890',
+                    }),
+                    error => {
+                      if (!error) {
+                        this.props.navigation.replace('Main')
+                      }
+                    }
+                  )
+                }
+              },
+              {
                 text: 'Batal',
                 onPress: () => {
                   this.setState({
@@ -179,18 +201,29 @@ export default class Login extends Component {
         <View style={{ paddingTop: StatusBar.currentHeight, flex: 1 }}>
           <SafeAreaView style={{ flex: 1 }}>
             <ScrollView>
-              <View style={{ paddingHorizontal: 30, alignItems: 'center', marginBottom: 30 }}>
+              <View style={{ paddingHorizontal: 30, alignItems: 'center', marginBottom: 15 }}>
                 <Image style={{ width: 150, height: 150, marginBottom: 20, marginTop: 20 }} source={require('../images/copek.png')} />
                 <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 8 }}>Selamat datang!</Text>
                 <Text style={{ color: Color.textMuted, textAlign: 'center', paddingHorizontal: 20 }}>Silakan masukan nomor handphone dan password anda</Text>
               </View>
+              <View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter, marginBottom: 15 }}>
+                <View style={{ width: 320, height: 100, marginVertical: 15, backgroundColor: Color.grayLight }}>
+                  <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+                    <ActivityIndicator size='large' color={Color.gray} />
+                  </View>
+                  <AdMobBanner
+                    adSize="largeBanner"
+                    adUnitID="ca-app-pub-8047867116429118/7062955117"
+                  />
+                </View>
+              </View>
               {
                 alertMsg &&
-                <View style={{ borderRadius: 10, marginHorizontal: 40 }}>
+                <View style={{ borderRadius: 10, marginHorizontal: 40, marginBottom: 15 }}>
                   <Text style={{ textAlign: 'center', color: Color.red }}>{alertMsgText}</Text>
                 </View>
               }
-              <View style={{ paddingHorizontal: 20, marginTop: 20 }}>
+              <View style={{ paddingHorizontal: 20 }}>
                 <View style={{ marginBottom: 15 }}>
                   <Text style={{ fontSize: 13 }}>No. Handphone</Text>
                   <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: errorPhoneNumber ? Color.red : Color.borderColor }}>

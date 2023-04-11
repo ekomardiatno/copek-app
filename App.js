@@ -1,6 +1,6 @@
-import React, { Component } from 'react'
-import { Text, View, StatusBar, PermissionsAndroid, UIManager, Platform, YellowBox, Alert, BackHandler, Linking } from 'react-native'
-import { createStackNavigator, createAppContainer, createBottomTabNavigator } from 'react-navigation'
+import React,{ Component } from 'react'
+import { Text,View,StatusBar,PermissionsAndroid,UIManager,Platform,YellowBox,Alert,BackHandler,Linking, ToastAndroid } from 'react-native'
+import { createStackNavigator,createAppContainer,createBottomTabNavigator } from 'react-navigation'
 import { Provider } from 'react-redux'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import Store from './app/store'
@@ -12,7 +12,7 @@ import cancellablePromise from './app/helpers/cancellablePromise'
 import { HOST_REST_API } from './app/components/Define'
 
 YellowBox.ignoreWarnings([
-  'Unrecognized WebSocket connection option(s) `agent`, `perMessageDeflate`, `pfx`, `key`, `passphrase`, `cert`, `ca`, `ciphers`, `rejectUnauthorized`. Did you mean to put these under `headers`?', 'Possible Unhandled Promise Rejection',
+  'Unrecognized WebSocket connection option(s) `agent`, `perMessageDeflate`, `pfx`, `key`, `passphrase`, `cert`, `ca`, `ciphers`, `rejectUnauthorized`. Did you mean to put these under `headers`?','Possible Unhandled Promise Rejection',
   'Animated: `useNativeDriver` was not specified.'
 ])
 
@@ -59,7 +59,7 @@ const TabNavigator = createBottomTabNavigator(
   },
   {
     defaultNavigationOptions: ({ navigation }) => ({
-      tabBarIcon: ({ focused, horizontal, tintColor }) => {
+      tabBarIcon: ({ focused,horizontal,tintColor }) => {
         const { routeName } = navigation.state
         let iconName = ``
         let label = ``
@@ -79,7 +79,7 @@ const TabNavigator = createBottomTabNavigator(
         return (
           <View style={{ alignItems: 'center' }}>
             <Icon name={iconName} size={20} color={tintColor} />
-            <Text style={{ fontSize: 11, color: focused ? Color.black : Color.textMuted, marginTop: 3, letterSpacing: 1 }} numberOfLines={1}>{label}</Text>
+            <Text style={{ fontSize: 11,color: focused ? Color.black : Color.textMuted,marginTop: 3,letterSpacing: 1 }} numberOfLines={1}>{label}</Text>
           </View>
         )
       }
@@ -156,7 +156,7 @@ const StackNavigator = createStackNavigator({
   Soon: {
     screen: SoonScreen
   }
-}, {
+},{
   defaultNavigationOptions: {
     header: null
   }
@@ -164,12 +164,12 @@ const StackNavigator = createStackNavigator({
 
 const AppContainer = createAppContainer(StackNavigator)
 
-function changeFontStyle(a, b) {
+function changeFontStyle(a,b) {
   let oldRender = a.render;
   a.render = function (...args) {
-    let origin = oldRender.call(this, ...args);
-    return React.cloneElement(origin, {
-      style: [b, origin.props.style]
+    let origin = oldRender.call(this,...args);
+    return React.cloneElement(origin,{
+      style: [b,origin.props.style]
     });
   };
 }
@@ -178,7 +178,7 @@ class App extends Component {
   timerReFetch
   constructor(props) {
     super(props)
-    changeFontStyle(Text, { color: Color.textColor, fontFamily: 'Yantramanav' })
+    changeFontStyle(Text,{ color: Color.textColor,fontFamily: 'Yantramanav' })
   }
 
   _requestLocationPermission = async () => {
@@ -199,7 +199,7 @@ class App extends Component {
   pendingPromises = []
 
   appendPendingPromise = promise => {
-    this.pendingPromises = [...this.pendingPromises, promise]
+    this.pendingPromises = [...this.pendingPromises,promise]
   }
 
   removePendingPromise = promise => {
@@ -208,9 +208,9 @@ class App extends Component {
 
   componentDidMount() {
     // this._requestLocationPermission()
-    StatusBar.setBarStyle('dark-content', true)
+    StatusBar.setBarStyle('dark-content',true)
     Platform.OS === 'android' &&
-      StatusBar.setBackgroundColor(Color.white, true)
+      StatusBar.setBackgroundColor(Color.white,true)
     this._getAllVersion()
   }
 
@@ -224,7 +224,7 @@ class App extends Component {
           return item.appVersionName
         }).indexOf(version)
         if (index < 0) {
-          if(Platform.OS === 'android') {
+          if (Platform.OS === 'android') {
             Alert.alert(
               'Aplikasi telah diperbarui',
               'Silakan perbarui aplikasi ke versi terbaru',
@@ -265,14 +265,15 @@ class App extends Component {
         this.removePendingPromise(wrappedPromise)
       })
       .catch(() => {
-        this.timerReFetch = setTimeout(function () {
-          this._getAllVersion()
-        }.bind(this), 10000)
+        ToastAndroid.show('Tidak dapat terhubung ke sistem', ToastAndroid.SHORT)
+        // this.timerReFetch = setTimeout(function () {
+        //   this._getAllVersion()
+        // }.bind(this), 10000)
       })
   }
 
   _promiseGetAllVersion = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve,reject) => {
       fetch(`${HOST_REST_API}app-version/copek`)
         .then(res => res.json())
         .then(resolve)

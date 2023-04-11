@@ -26,16 +26,16 @@ import { getGeocoding, getAddressComponents } from '../../actions/geocode.action
 import cancellablePromise from '../../helpers/cancellablePromise'
 import { getCart } from '../../actions/carts.actions'
 import { HOST_REST_API } from '../../components/Define'
-import { FoodHome } from '../../components/Section'
+import { AdMobBanner } from 'react-native-admob'
+import Spinner from 'react-native-spinkit'
+let wrapperCart = new Animated.Value(100)
+const scrollY = new Animated.Value(0)
 
 class Home extends Component {
-  scrollRef = React.createRef()
+  _scrollRef = React.createRef()
   constructor() {
     super()
     this.state = {
-      scrollY: new Animated.Value(0),
-      wrapperCart: new Animated.Value(100),
-      scrollEnd: 0,
       carts: [],
       position: null,
       collection: [],
@@ -84,11 +84,7 @@ class Home extends Component {
       this.appendPendingPromise(wrappedPromise)
       wrappedPromise.promise
         .then(position => {
-          this.setState({
-            position
-          }, () => {
-            this._getGeocoding()
-          })
+          this._getGeocoding({ position: position })
         })
         .then(() => {
           this.removePendingPromise(wrappedPromise)
@@ -101,102 +97,99 @@ class Home extends Component {
     })
   }
 
-  dataCart = () => {
+  dataCart = (state = null) => {
     const wrappedPromise = cancellablePromise(getCart())
     this.appendPendingPromise(wrappedPromise)
     wrappedPromise.promise
       .then(carts => {
-        this.setState({
-          carts
-        }, () => {
-          this.forceUpdate()
-          if (this.state.carts.length < 1) {
-            Animated.timing(this.state.wrapperCart, {
-              duration: 250,
-              toValue: 100,
-              easing: Easing.inOut(Easing.ease),
-            }).start()
-          } else {
-            Animated.timing(this.state.wrapperCart, {
-              duration: 250,
-              toValue: 0,
-              easing: Easing.inOut(Easing.ease),
-            }).start()
-          }
-        })
+        if (state === null) {
+          this.setState({
+            carts
+          })
+        } else {
+          this.setState({
+            carts,
+            ...state
+          })
+        }
       })
       .then(() => {
         this.removePendingPromise(wrappedPromise)
       })
   }
 
-  _getGeocoding = () => {
-    this.setState({
-      errorGeocode: false
-    }, () => {
-      const { position } = this.state
-      const wrappedPromise = cancellablePromise(getGeocoding(position))
-      this.appendPendingPromise(wrappedPromise)
-      wrappedPromise.promise
-        .then(geocode => {
-          let poi = getAddressComponents(geocode)
-          let filter = geocode.results.filter(g => {
-            return g.types.indexOf('route') > -1
-          })
-          filter = filter[0].address_components.filter(f => {
-            return f.types.indexOf('administrative_area_level_2') > -1
-          })
-          let cityName = filter[0].short_name
-          this.setState({
-            currentLocation: {
-              poi: poi[0],
-              cityName: cityName,
-              fullAddress: poi[1]
-            }
-          }, () => {
-            this._getCollection()
-          })
+  _getGeocoding = (state) => {
+    if (this.state.errorGeocode) {
+      this.setState({
+        errorGeocode: false
+      })
+    }
+    const wrappedPromise = cancellablePromise(getGeocoding(state.position))
+    this.appendPendingPromise(wrappedPromise)
+    wrappedPromise.promise
+      .then(geocode => {
+        let poi = getAddressComponents(geocode)
+        let filter = geocode.results.filter(g => {
+          return g.types.indexOf('route') > -1
         })
-        .then(() => {
-          this.removePendingPromise(wrappedPromise)
+        filter = filter[0].address_components.filter(f => {
+          return f.types.indexOf('administrative_area_level_2') > -1
         })
-        .catch((error) => {
-          this.setState({
-            errorGeocode: true
-          })
+        let cityName = filter[0].short_name
+        this._getCollection({
+          currentLocation: {
+            poi: poi[0],
+            cityName: cityName,
+            fullAddress: poi[1]
+          },
+          ...state
         })
-    })
+      })
+      .then(() => {
+        this.removePendingPromise(wrappedPromise)
+      })
+      .catch((error) => {
+        this.setState({
+          errorGeocode: true
+        })
+      })
   }
 
-  _getCollection = () => {
-    this.setState({
-      errorCollection: false
-    }, () => {
-      const wrappedPromise = cancellablePromise(this._promiseCollection())
-      this.appendPendingPromise(wrappedPromise)
-      wrappedPromise.promise
-        .then(data => {
-          this.setState({
-            emptyCollection: data.length <= 0 ? true : false,
-            collection: data
-          }, () => {
-            this.dataCart()
+  _getCollection = (state) => {
+    if (this.errorCollection) {
+      this.setState({
+        errorCollection: false
+      })
+    }
+    const wrappedPromise = cancellablePromise(this._promiseCollection(state.currentLocation, state.position))
+    this.appendPendingPromise(wrappedPromise)
+    wrappedPromise.promise
+      .then(data => {
+        if (data.length > 0) {
+          this.dataCart({
+            emptyCollection: false,
+            collection: data,
+            ...state
           })
-        })
-        .then(() => {
-          this.removePendingPromise(wrappedPromise)
-        })
-        .catch(error => {
+        } else {
           this.setState({
-            errorCollection: true
+            ...state,
+            emptyCollection: true
           })
+        }
+      })
+      .then(() => {
+        this.removePendingPromise(wrappedPromise)
+      })
+      .catch(error => {
+        this.setState({
+          errorCollection: true
         })
-    })
+      })
   }
 
-  _promiseCollection = () => {
+  _promiseCollection = (currentLocation, position) => {
     return new Promise((resolve, reject) => {
-      const { currentLocation, position } = this.state
       const cityName = encodeURI(currentLocation.cityName)
       fetch(`${HOST_REST_API}food/collection?kota=${cityName}&koordinat=${position.latitude},${position.longitude}`)
         .then(res => res.json())
@@ -211,7 +204,7 @@ class Home extends Component {
         barStyle: 'dark-content',
         background: Color.white
       },
-      actionBack: this.dataCart,
+      actionBack: () => this.dataCart(),
       data: {
         position: this.state.position,
         ...data
@@ -220,75 +213,59 @@ class Home extends Component {
     })
   }
 
-  layout = event => {
-    let heightLay = event.nativeEvent.layout.height
-    this.setState({
-      wrapperHeight: heightLay
-    })
-
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    if (this.state.scrollEnd != nextState.scrollEnd) {
-      return false
-    }
-    return true
-  }
-
-  _momentumScrollBegin = (e) => {
-    if (this.state.carts.length > 0) {
-      if (e.nativeEvent.contentOffset.y > this.state.scrollEnd || e.nativeEvent.contentOffset.y >= (this.state.wrapperHeight - height)) {
-        Animated.timing(this.state.wrapperCart, {
-          duration: 250,
-          toValue: 100,
-          easing: Easing.inOut(Easing.ease),
-        }).start()
-      } else {
-        Animated.timing(this.state.wrapperCart, {
-          duration: 250,
-          toValue: 0,
-          easing: Easing.inOut(Easing.ease),
-        }).start()
-      }
-    }
-  }
-
-  _momentumScrollEnd = (e) => {
-    this.state.scrollEnd !== e.nativeEvent.contentOffset.y &&
-      this.setState({
-        scrollEnd: e.nativeEvent.contentOffset.y
-      })
-  }
-
   _selectLocation = (position) => {
-    this.setState({
+    this._getGeocoding({
       collection: [],
       position: {
         latitude: position.geometry.latitude,
         longitude: position.geometry.longitude
       }
-    }, () => {
-      this._getGeocoding()
     })
   }
 
+  _lastestScrollY = 0
+  _momentumScrollEnd = (e) => {
+    const { carts } = this.state
+    if (carts.length > 0) {
+      Animated.timing(wrapperCart, {
+        duration: 250,
+        toValue: e.nativeEvent.contentOffset.y > this._lastestScrollY ? 100 : 0,
+        easing: Easing.inOut(Easing.ease),
+      }).start()
+    }
+    this._lastestScrollY = e.nativeEvent.contentOffset.y
+  }
+
   render() {
-    const heightTitleLocation = Animated.interpolate(this.state.scrollY, {
+    if (this.state.carts.length > 0) {
+      Animated.timing(wrapperCart, {
+        duration: 250,
+        toValue: 0,
+        easing: Easing.inOut(Easing.ease),
+      }).start()
+    } else {
+      Animated.timing(wrapperCart, {
+        duration: 250,
+        toValue: 100,
+        easing: Easing.inOut(Easing.ease),
+      }).start()
+    }
+    const heightTitleLocation = scrollY.interpolate({
       inputRange: [0, 50],
       outputRange: [20, 0],
       extrapolate: 'clamp'
     })
-    const opacityTitleLocation = Animated.interpolate(this.state.scrollY, {
+    const opacityTitleLocation = scrollY.interpolate({
       inputRange: [0, 50],
       outputRange: [1, 0],
       extrapolate: 'clamp'
     })
-    const elevationHeader = Animated.interpolate(this.state.scrollY, {
+    const elevationHeader = scrollY.interpolate({
       inputRange: [0, 50],
       outputRange: [0, 10],
       extrapolate: 'clamp'
     })
-    const opacityChevron = Animated.interpolate(this.state.scrollY, {
+    const opacityChevron = scrollY.interpolate({
       inputRange: [0, 50],
       outputRange: [0, 1],
       extrapolate: 'clamp'
@@ -467,44 +444,99 @@ class Home extends Component {
                   }
                 </View>
                 :
+                this.state.emptyCollection &&
+                <View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter }}>
+                  <View style={{ width: 320, height: 100, marginVertical: 15, backgroundColor: Color.grayLight }}>
+                    <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+                      <ActivityIndicator size='large' color={Color.gray} />
+                    </View>
+                    <AdMobBanner
+                      adSize="largeBanner"
+                      adUnitID="ca-app-pub-8047867116429118/7062955117"
+                    />
+                  </View>
+                </View>
+                ||
                 <View
                   style={{
-                    flexDirection: 'row',
                     backgroundColor: Color.grayLighter,
                     borderRadius: 10,
                     paddingHorizontal: 15,
                     marginHorizontal: 15,
                     marginBottom: 10,
-                    opacity: this.state.emptyCollection || this.state.errorCollection || this.state.errorGeocode || this.state.errorLocation ? .35 : 1
+                    opacity: 1,
+                    height: 40
                   }}
-                >
-                  <View
-                    style={{ flex: 1, height: 40 }}
-                  ></View>
-                </View>
+                />
             }
           </Animated.View>
           <View style={{ flex: 1 }}>
             {
               this.state.collection.length ?
                 <Animated.ScrollView
-                  ref={this.scrollRef}
+                  ref={this._scrollRef}
                   showsVerticalScrollIndicator={false}
                   bounces={false}
-                  onMomentumScrollBegin={this._momentumScrollBegin}
+                  scrollEventThrottle={0}
                   onMomentumScrollEnd={this._momentumScrollEnd}
-                  scrollEventThrottle={16}
                   onScroll={Animated.event([
                     {
-                      nativeEvent: { contentOffset: { y: this.state.scrollY } }
+                      nativeEvent: { contentOffset: { y: scrollY } }
                     }
                   ])}
                 >
                   <View
                     style={{ paddingTop: 135, flex: 1 }}
-                    onLayout={this.layout}
                   >
-                    <FoodHome currentLocation={this.state.currentLocation} position={this.state.position} collection={this.state.collection} _navigate={this._navigate} />
+                    <View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter, marginBottom: 5 }}>
+                      <View style={{ width: 320, height: 100, marginVertical: 15, backgroundColor: Color.grayLight }}>
+                        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+                          <ActivityIndicator size='large' color={Color.gray} />
+                        </View>
+                        <AdMobBanner
+                          adSize="largeBanner"
+                          adUnitID="ca-app-pub-8047867116429118/7062955117"
+                        />
+                      </View>
+                    </View>
+                    <View>
+                      {
+                        this.state.collection.map((item, i) => (
+                          item.data.length ?
+                            <View key={(i + 1) * Math.random()}>
+                              {
+                                item.style === 'adSlideCard' ?
+                                  <SliderCard
+                                    navigate={(screen, data = null, params = {}) => {
+                                      this._navigate(screen, data, params)
+                                    }}
+                                    data={item.data}
+                                  />
+                                  :
+                                  <Items
+                                    style={item.style}
+                                    title={item.title[0]}
+                                    subTitle={item.title[1]}
+                                    more={() => {
+                                      this._navigate(
+                                        item.category === 'food' ? 'ListMenu' : 'ListMerchant',
+                                        {
+                                          cityName: this.state.currentLocation.cityName,
+                                          position: this.state.position,
+                                          orderBy: item.more
+                                        }
+                                      )
+                                    }}
+                                    navigate={this._navigate}
+                                    category={item.category}
+                                    product={item.data}
+                                  />
+                              }
+                            </View>
+                            : null
+                        ))
+                      }
+                    </View>
                   </View>
                 </Animated.ScrollView>
                 :
@@ -514,7 +546,7 @@ class Home extends Component {
                   <DummyItems horizontal />
                   {
                     this.state.emptyCollection &&
-                    <View style={{ position: 'absolute', top: 0, right: 0, left: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,.75)', paddingHorizontal: 30 }}>
+                    <View style={{ position: 'absolute', top: 0, right: 0, left: 0, bottom: 0, alignItems: 'center', justifyContent: 'center', backgroundColor: Color.white, paddingHorizontal: 30 }}>
                       <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 6 }}>Belum tersedia</Text>
                       <Text style={{ textAlign: 'center', lineHeight: 18, color: Color.textMuted }}>Maaf belum ada resto yang buka di sekitar sini, silakan coba lagi lain waktu!</Text>
                     </View>
@@ -556,7 +588,7 @@ class Home extends Component {
             }
 
           </View>
-          <Animated.View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', transform: [{ translateY: this.state.wrapperCart }] }}>
+          <Animated.View style={{ position: 'absolute', bottom: 0, left: 0, right: 0, overflow: 'hidden', transform: [{ translateY: wrapperCart }] }}>
             {
               Platform.OS === 'android' ?
                 <TouchableNativeFeedback

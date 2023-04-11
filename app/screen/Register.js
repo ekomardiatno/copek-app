@@ -4,6 +4,7 @@ import Color, { colorYiq } from '../components/Color'
 import { SimpleHeader, Button } from '../components/Components'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import { HOST_REST_API } from '../components/Define'
+import { AdMobBanner, AdMobInterstitial } from 'react-native-admob'
 
 export default class Register extends Component {
   constructor(props) {
@@ -111,18 +112,34 @@ export default class Register extends Component {
     }
   }
 
+  componentDidMount() {
+    AdMobInterstitial.setAdUnitID('ca-app-pub-8047867116429118/6848645771')
+    AdMobInterstitial.requestAd().then(() => AdMobInterstitial.showAd())
+  }
+
   render() {
     return (
       <SafeAreaView style={{ flex: 1 }}>
         <SimpleHeader goBack navigation={this.props.navigation} title='Daftar akun' />
         <ScrollView>
-          <View style={{ paddingHorizontal: 20, marginVertical: 15 }}>
+          <View style={{ paddingHorizontal: 20, marginBottom: 15 }}>
             {
               this.state.alertMsg &&
               <View style={{ padding: 10, alignItems: 'center', backgroundColor: Color.red, marginBottom: 15, borderRadius: 10, elevation: 10 }}>
                 <Text style={{ color: colorYiq(Color.red) }}>{this.state.alertMsgText}</Text>
               </View>
             }
+            <View style={{ alignItems: 'center', justifyContent: 'center', backgroundColor: Color.grayLighter, marginBottom: 15, marginHorizontal: -20 }}>
+              <View style={{ width: 320, height: 100, marginVertical: 15, backgroundColor: Color.grayLight }}>
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
+                  <ActivityIndicator size='large' color={Color.gray} />
+                </View>
+                <AdMobBanner
+                  adSize="largeBanner"
+                  adUnitID="ca-app-pub-8047867116429118/7062955117"
+                />
+              </View>
+            </View>
             <View style={{ marginBottom: 15 }}>
               <Text style={{ fontSize: 13 }}>Nama Lengkap</Text>
               <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: Color.borderColor }}>
@@ -184,7 +201,7 @@ export default class Register extends Component {
             <View style={{ paddingHorizontal: 30, marginVertical: 15 }}>
               <TouchableOpacity
                 activeOpacity={1}
-                onPress={() => Linking.openURL('whatsapp://send?phone=+6282288369844')}
+                onPress={() => Linking.openURL('whatsapp://send?phone=+62859106975774')}
               >
                 <View style={{ flexDirection: 'row' }}>
                   <Text style={{ fontSize: 13, textAlign: 'center' }}>Punya masalah saat mendaftar? <Text style={{ fontSize: 13, fontWeight: 'bold' }}>Dapatkan bantuan Admin.</Text>

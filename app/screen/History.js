@@ -63,7 +63,6 @@ export default class History extends Component {
     wrappedPromise.promise
       .then(res => {
         AdMobInterstitial.setAdUnitID('ca-app-pub-8047867116429118/6848645771')
-        AdMobInterstitial.setTestDevices([AdMobInterstitial.simulatorId])
         AdMobInterstitial.requestAd().then(() => AdMobInterstitial.showAd())
         if (res.length > 0) {
           for (let i = 0; i < res.length; i++) {

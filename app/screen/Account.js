@@ -5,7 +5,6 @@ import Color, { colorYiq } from '../components/Color'
 import Icon from 'react-native-vector-icons/FontAwesome5'
 import AsyncStorage from '@react-native-community/async-storage'
 import { version } from '../../package.json'
-// import { AdMobInterstitial } from 'react-native-admob'
 
 export default class Account extends Component {
   constructor(props) {
@@ -22,10 +21,6 @@ export default class Account extends Component {
           result = JSON.parse(result)
           this.setState({
             userLoggedIn: result
-          }, () => {
-            // AdMobInterstitial.setAdUnitID('ca-app-pub-8047867116429118/6848645771')
-            // AdMobInterstitial.setTestDevices([AdMobInterstitial.simulatorId])
-            // AdMobInterstitial.requestAd().then(() => AdMobInterstitial.showAd())
           })
         }
       }
@@ -97,7 +92,7 @@ export default class Account extends Component {
                         title: 'Dapatkan bantuan Admin',
                         iconName: 'question-circle',
                         onPress: () => {
-                          Linking.openURL('whatsapp://send?phone=+6282288369844')
+                          Linking.openURL('whatsapp://send?phone=+62859106975774')
                         }
                       },
                       {
@@ -125,7 +120,7 @@ export default class Account extends Component {
                         title: 'Dapatkan bantuan Admin',
                         iconName: 'question-circle',
                         onPress: () => {
-                          Linking.openURL('whatsapp://send?phone=+6282288369844')
+                          Linking.openURL('whatsapp://send?phone=+62859106975774')
                         }
                       }
                     ]

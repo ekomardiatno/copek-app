@@ -351,7 +351,7 @@ class Home extends Component {
                   :
                   <Image style={{ width: '100%', height: '100%' }} source={require('../../images/icons/passenger-marker.png')} />
               }
-              <View style={{ position: 'absolute', left: (25 / 2), top: 3 }}>
+              <View style={{ position: 'absolute', left: 0, right: 0, alignItems: 'center', justifyContent: 'center', top: 3 }}>
                 <Spinner
                   type='Circle'
                   color={Color.white}
